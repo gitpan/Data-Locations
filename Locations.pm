@@ -26,7 +26,7 @@ require Exporter;
 
 @EXPORT_OK = qw();
 
-$VERSION = "4.1";
+$VERSION = "4.2";
 
 my $Dummy = '[Error: stale reference!]';  ##  Dummy class name
 
@@ -573,6 +573,8 @@ __END__
 =head1 NAME
 
 Data::Locations - magic insertion points in your data
+
+=head1 PREFACE
 
 Did you already encounter the problem that you had to produce some
 data in a particular order, but that some piece of the data was still
@@ -1573,6 +1575,79 @@ See the section on "C<select()>" in L<perlfunc(1)> for more details!
 
 =back
 
+=head1 WARNING
+
+"C<Data::Locations>" are rather delicate objects; they are valid Perl
+file handles B<AS WELL AS> valid Perl objects B<AT THE SAME TIME>.
+
+As a consequence, B<YOU CANNOT INHERIT> from the "C<Data::Locations>"
+class, i.e., it is B<NOT> possible to create a derived class or subclass
+from the "C<Data::Locations>" class!
+
+Trying to do so will cause many severe malfunctions, most of which
+will not be apparent immediately.
+
+Chances are also great that by adding new attributes to a
+"C<Data::Locations>" object you will clobber its (quite tricky)
+underlying data structure.
+
+Therefore, use embedding and delegation instead, rather than
+inheritance, as shown below:
+
+  package My::Class;
+  use Data::Locations;
+  sub new
+  {
+      my $self = shift;
+      my ($location, $object);
+      if (ref($self)) { $location = $self->{'location'}->new(); }
+      else            { $location =     Data::Locations->new(); }
+      $object = { 'location'   => $location,
+                  'attribute1' => $whatever,
+                  'attribute2' => $whatelse };
+      bless($object, ref($self) || $self);
+  }
+  sub AUTOLOAD
+  {
+      my $self = shift;
+      return if $AUTOLOAD =~ /::DESTROY$/;
+      $AUTOLOAD =~ s/^My::Class:://;
+      if (ref($self)) { $self->{'location'}->$AUTOLOAD(@_); }
+      else            {     Data::Locations->$AUTOLOAD(@_); }
+  }
+  1;
+
+Note that using this scheme, all methods available for
+"C<Data::Locations>" objects are also (automatically and
+directly) available for "C<My::Class>" objects, i.e.,
+
+  use My::Class;
+  $obj = My::Class->new();
+  $obj->filename('test.txt');
+  $obj->print("This is ");
+  $sub = $obj->new();
+  $obj->print("information.");
+  @items = $obj->read();
+  print "<", join('|', @items), ">\n";
+  $sub->print("an additional piece of ");
+  $obj->reset();
+  @items = $obj->read();
+  print "<", join('|', @items), ">\n";
+  My::Class->dump();
+
+will work as expected (unless you redefine these methods in
+"C<My::Class>").
+
+Moreover, with this scheme, you are free to add new methods
+and/or attributes as you please.
+
+The class "C<My::Class>" can also be subclassed without any
+restrictions.
+
+However, "C<My::Class>" objects are B<NOT> valid Perl file handles;
+therefore, they cannot be used as such in combination with Perl's
+built-in operators for file access.
+
 =head1 EXAMPLE #1
 
   #!/usr/local/bin/perl -w
@@ -1964,7 +2039,7 @@ perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 4.1.
+This man page documents "Data::Locations" version 4.2.
 
 =head1 AUTHOR
 

@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 4.1
+                    Package "Data::Locations" Version 4.2
                   =========================================
 
 
@@ -9,6 +9,15 @@
 
 Version history:
 ----------------
+
+Version 4.2   07.09.98
+
+ +  Added a warning to the documentation that inheritance is a no-no with
+    an example of how to use embedding/delegation instead.
+ +  Introduced an additional header "Preface" in the POD documentation to
+    avoid clobbering of the information displayed by CPAN.pm et al.
+ +  Added the new attributes to "Makefile.PL" for ActiveState's port
+    of Perl 5.005 to the Win32 platform.
 
 Version 4.1   06.06.98
 
@@ -40,40 +49,40 @@ Version 4.0   23.05.98
 
 Version 3.0   29.07.97
 
-    Added modules "Data::Locations::Proxy" and "Data::Locations::Shell"
+ +  Added modules "Data::Locations::Proxy" and "Data::Locations::Shell"
     in order to make statements such as print $FH "text"; and $text = <$FH>;
     possible.
-    The two methods "set_filename()" and "get_filename()" have been
+ +  The two methods "set_filename()" and "get_filename()" have been
     replaced by a single method, "filename()".
 
 Version 2.1   25.07.97
 
-    Intermediate development version not publicly released.
+ +  Intermediate development version not publicly released.
 
 Version 2.0   24.07.97
 
-    Changed the name of this module from "Locations" to "Data::Locations".
-    Added new methods "printf()", "read()", "reset()" and "tie()".
-    Introduced a companion module "Tie::Handle" to tie file handles to
+ +  Changed the name of this module from "Locations" to "Data::Locations".
+ +  Added new methods "printf()", "read()", "reset()" and "tie()".
+ +  Introduced a companion module "Tie::Handle" to tie file handles to
     locations, in order to be able to print/read to/from locations using
     Perl's built-in operators for accessing file handles instead of method
     calls.
 
 Version 1.2   18.07.97
 
-    Intermediate development version not publicly released.
+ +  Intermediate development version not publicly released.
 
 Version 1.1   16.07.97
 
-    Fixed a bug in the automatic detection of potential infinite recursions.
+ +  Fixed a bug in the automatic detection of potential infinite recursions.
     (This bug did not cause any malfunction, but degraded performance
     unnecessarily.)
-    Cleanup of the code of remnants such as "carp - exit" instead of "croak".
-    Improved the documentation.
+ +  Cleanup of the code of remnants such as "carp - exit" instead of "croak".
+ +  Improved the documentation.
 
 Version 1.0   14.07.97
 
-    First release.
+ +  First release.
 
 ----------------------------------------------------------------------------
 
