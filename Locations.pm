@@ -1,7 +1,7 @@
 
 ###############################################################################
 ##                                                                           ##
-##    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.                       ##
+##    Copyright (c) 1997 - 2004 by Steffen Beyer.                            ##
 ##    All rights reserved.                                                   ##
 ##                                                                           ##
 ##    This package is free software; you can redistribute it                 ##
@@ -21,7 +21,7 @@ use DynaLoader ();
 
 @ISA = qw(DynaLoader);
 
-$VERSION = "5.2";
+$VERSION = "5.3";
 
 DynaLoader::bootstrap Data::Locations $VERSION;
 
@@ -1564,7 +1564,7 @@ See the section on "C<select()>" in L<perlfunc(1)> for more details.
   $prototype->print("void hello(void)");
 
   $copyright->println("/*");
-  $copyright->println("    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.");
+  $copyright->println("    Copyright (c) 1997 - 2004 by Steffen Beyer.");
   $copyright->println("    All rights reserved.");
   $copyright->println("*/");
 
@@ -1583,7 +1583,7 @@ See the section on "C<select()>" in L<perlfunc(1)> for more details.
 When executed, this example will print
 
   /*
-      Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+      Copyright (c) 1997 - 2004 by Steffen Beyer.
       All rights reserved.
   */
   default filename = 'default.txt'
@@ -1594,7 +1594,7 @@ to the screen and create the following two files:
   example.c
   ::::::::::::::
   /*
-      Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+      Copyright (c) 1997 - 2004 by Steffen Beyer.
       All rights reserved.
   */
   #include <stdio.h>
@@ -1607,7 +1607,7 @@ to the screen and create the following two files:
   example.h
   ::::::::::::::
   /*
-      Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+      Copyright (c) 1997 - 2004 by Steffen Beyer.
       All rights reserved.
   */
   #include <stdio.h>
@@ -1907,23 +1907,17 @@ perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 5.2.
+This man page documents "Data::Locations" version 5.3.
 
 =head1 AUTHOR
 
-  Steffen Beyer
-  Ainmillerstr. 5 / App. 513
-  D-80801 Munich
-  Germany
-
-  mailto:sb@engelschall.com
-  http://www.engelschall.com/u/sb/download/
-
-  (Contact by e-mail preferred)
+ Steffen Beyer
+ mailto:sb@engelschall.com
+ http://www.engelschall.com/u/sb/download/
 
 =head1 COPYRIGHT
 
-Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+Copyright (c) 1997 - 2004 by Steffen Beyer.
 All rights reserved.
 
 =head1 LICENSE

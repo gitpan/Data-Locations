@@ -57,7 +57,7 @@ $includes->println(">");
 $prototype->print("void hello(void)");
 
 $copyright->println("/*");
-$copyright->println("    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.");
+$copyright->println("    Copyright (c) 1997 - 2004 by Steffen Beyer.");
 $copyright->println("    All rights reserved.");
 $copyright->println("*/");
 
@@ -69,7 +69,7 @@ $rule
 example.h:
 $rule
 /*
-    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+    Copyright (c) 1997 - 2004 by Steffen Beyer.
     All rights reserved.
 */
 #include <stdio.h>
@@ -78,7 +78,7 @@ $rule
 example.c:
 $rule
 /*
-    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+    Copyright (c) 1997 - 2004 by Steffen Beyer.
     All rights reserved.
 */
 #include <stdio.h>

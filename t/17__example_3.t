@@ -46,103 +46,103 @@ unless (open(FILE, ">$file"))
 
 {
     local(*STDOUT) = *FILE;
-    
+
     ##  Create the topmost location:
-    
+
     $level0 = Data::Locations->new("level0.txt");
-    
+
     print $level0 <<'VERBATIM';
 Printing first line to location 'level0' via OPERATOR 'print'.
 VERBATIM
-    
+
     ##  Create an embedded location (nested 1 level deep):
-    
+
     $level1 = $level0->new();
-    
+
     $level0->print(<<'VERBATIM');
 Printing last line to location 'level0' via METHOD 'print'.
 VERBATIM
-    
+
     ##  Now "tie" the embedded location to file handle STDOUT:
-    
+
     $level1->tie('STDOUT');
-    
+
     print "Printing to location 'level1' via STDOUT.\n";
-    
+
     ##  Create another location (which will be embedded later):
-    
+
     $level2 = Data::Locations->new();
-    
+
     ##  Create a file handle ("IO::Handle" works equally well):
-    
+
     $fh = FileHandle->new();
-    
+
     ##  Now "tie" the location "$level2" to this file handle "$fh":
-    
+
     $level2->tie($fh);
-    
+
     ##  And select "$fh" as the default output file handle:
-    
+
     select($fh);
-    
+
     print "Printing to location 'level2' via default file handle '\$fh'.\n";
-    
+
     ##  Embed location "$level2" in location "$level1":
-    
+
     print $level1 $level2;
-    
+
     ##  (Automatically removes "toplevel" status from location "$level2")
-    
+
     print STDOUT "Printing to location 'level1' explicitly via STDOUT.\n";
-    
+
     ##  Create a third embedded location (nested 3 levels deep):
-    
+
     $level3 = $level2->new();
-    
+
     ##  Restore STDOUT as the default output file handle:
-    
+
     select(STDOUT);
-    
+
     print $fh "Printing to location 'level2' via file handle '\$fh'.\n";
-    
+
     ##  Trap all warnings:
-    
+
     $SIG{__WARN__} = sub
     {
         print STDERR "WARNING intercepted:\n", @_, "End Of Warning.\n";
     };
-    
+
     ##  Note that WITHOUT this trap, warnings would go to the system
     ##  standard error device DIRECTLY, WITHOUT passing through the
     ##  file handle STDERR!
-    
+
     ##  Now "tie" location "$level3" to file handle STDERR:
-    
+
     $level3->tie(*STDERR);
-    
+
     ##  Provoke a warning message (don't forget the "-w" switch!):
-    
+
     $fake = \$fh;
     $level3->print($fake);
-    
+
     ##  Provoke another warning message (don't forget the "-w" switch!):
-    
+
     $level3->dump();
-    
+
     {
         ##  Silence warning that reference count of location is still > 0:
-    
+
         local($^W) = 0;
-    
+
         ##  And untie file handle STDOUT from location "$level1":
-    
+
         untie *STDOUT;
     }
-    
+
     print "Now STDOUT goes to the screen again.\n";
-    
+
     ##  Read from location "$level3":
-    
+
     while (<STDERR>)  ##  Copy warning messages to the screen:
     {
         if (/^.*?\bData::Locations::[a-z]+\(\):\s+(.+?)(?=\s+at\s|\n)/)
@@ -150,26 +150,26 @@ VERBATIM
             print "Warning: $1\n";
         }
     }
-    
+
     while (<STDERR>) { print; }
-    
+
     ##  (Prints nothing because location was already read past its end)
-    
+
     ##  Reset the internal reading mark:
-    
+
     (tied *{STDERR})->reset();
-    
+
     ##  (You should usually use "$level3->reset();", though!)
-    
+
     while (<STDERR>) { print; }
-    
+
     ##  (Copies the contents of location "$level3" to the screen)
 }
 
 ##  (End of scope for redirected STDOUT)
 
 close(FILE);
-    
+
 ##  Read output file "level0.txt":
 
 $txt = join('', $level0->read());

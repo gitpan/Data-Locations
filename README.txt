@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.2
+                    Package "Data::Locations" Version 5.3
                   =========================================
 
 
@@ -9,28 +9,138 @@ This package is available for download either from my web site at
 
 or from any CPAN (= "Comprehensive Perl Archive Network") mirror server:
 
-                  http://www.perl.com/CPAN/authors/id/STBEY/
+               http://www.perl.com/CPAN/authors/id/S/ST/STBEY/
+
+
+What's new in version 5.3:
+--------------------------
+
+ +  Re-applied the refcount offset in "02___refcount.t" to
+    Perl versions >= 5.008005 in order to fix the failing
+    tests. See also version 5.1 in the file CHANGES.txt.
+
+
+Legal issues:
+-------------
+
+This package with all its parts is
+
+Copyright (c) 1997 - 2004 by Steffen Beyer.
+All rights reserved.
+
+This package is free software; you can use, modify and redistribute
+it under the same terms as Perl itself, i.e., under the terms of
+the "Artistic License" or the "GNU General Public License".
+
+Please refer to the files "Artistic.txt" and "GNU_GPL.txt"
+in this distribution, respectively, for details!
 
 
 Prerequisites:
 --------------
 
-Perl version 5.004 (subversion 0) or higher, and a C compiler.
+Perl version 5.004 or higher, and an ANSI C compiler. (!)
+                                     ^^^^^^
+Note that in order to compile Perl modules which contain
+C (and/or XS) code (such as this one), you always HAVE
+to use the very same compiler your Perl itself was compiled
+with.
+
+Many vendors nowadays ship their operating system already
+comprising a precompiled version of Perl. Many times the
+compilers used to compile this version of Perl are not
+available to or not usually used by the users of these
+operating systems.
+
+In such cases building this module (or any other Perl
+module containing C and/or XS code) will not work. You
+will either have to get the compiler which was used to
+compile Perl itself (see for example the section "Compiler:"
+in the output of the command "perl -V"), or to build
+your own Perl with the compiler of your choice (which
+also allows you to take advantage of the various compile-
+time switches Perl offers).
+
+Note that Sun Solaris and Red Hat Linux frequently were
+reported to suffer from this kind of problem.
+
+Moreover, you usually cannot build any modules under
+Windows 95/98 since the Win 95/98 command shell doesn't
+support the "&&" operator. You will need the Windows NT
+command shell ("cmd.exe") or the "4DOS" shell to be
+installed on your Windows 95/98 system first. Note that
+Windows NT and Windows 2000 are not affected and just
+work fine. I don't know about Windows XP, however.
+
+Note that ActiveState provides precompiled binaries of
+this module for their Win32 port of Perl ("ActivePerl")
+on their web site, which you should be able to install
+simply by typing "ppm install Data-Locations" in your MS-DOS
+command shell (but note the "-" instead of "::" in the
+package name!). This also works under Windows 95/98 (!).
+
+If your firewall prevents "ppm" from downloading
+this package, you can also download it manually from
+http://www.activestate.com/ppmpackages/5.005/zips/ or
+http://www.activestate.com/ppmpackages/5.6/zips/.
+Follow the installation instructions included in
+the "zip" archive.
 
 
-Changes:
---------
+Note to CPAN Testers:
+---------------------
 
-Please refer to the file "CHANGES.txt" in this distribution for a version
-history of changes and the list of incompatible changes with respect to
-previous versions.
+After completion, version 5.3 of this module has already
+been tested successfully with the following configurations:
+
+  Perl 5.005_03  -  FreeBSD 4.1.1-RELEASE (with "dlopen() relative paths" patch)
+  Perl 5.6.0     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.7.1     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.7.2     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.8.0     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.8.5     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.8.5     -  FreeBSD 4.10-STABLE
+  Perl 5.8.0     -  Windows 2000 & MS VC++ 6.0 (native Perl build)
+
+Not all tests passed:
+
+  Perl 5.6.1     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.7.0     -  FreeBSD 4.1.1-RELEASE
+
+(As long as the "1?__example_?.t" tests pass,
+you may ignore the failing "11_______dump.t" test.)
 
 
 Installation:
 -------------
 
-Please see the file "INSTALL.txt" in this distribution for installation
-instructions.
+Please see the file "INSTALL.txt" in this distribution for instructions
+on how to install this package.
+
+It is essential that you read this file since one of the special cases
+described in it might apply to you, especially if you are running Perl
+under Windows.
+
+
+Changes over previous versions:
+-------------------------------
+
+Please refer to the file "CHANGES.txt" in this distribution for a more
+detailed version history log.
+
+
+Documentation:
+--------------
+
+The documentation of this package is included in POD format (= "Plain
+Old Documentation") in the file "Locations.pm" in this distribution,
+the human-readable markup-language standard for Perl documentation.
+
+By building this package, this documentation will automatically be
+converted into a man page, which will automatically be installed in
+your Perl tree for further reference through the installation process,
+where it can be accessed by the commands "man Data::Locations" (Unix)
+and "perldoc Data::Locations" (Unix and Win32 alike), for example.
 
 
 What does it do:
@@ -107,19 +217,6 @@ have already been heavily used in the automatic code generation of large
 software projects.
 
 
-Documentation:
---------------
-
-The documentation of this package is included in POD format (= "Plain
-Old Documentation") in the file "Locations.pm" in this distribution,
-the human-readable markup-language standard for Perl documentation.
-
-By building and installing this package, this documentation will
-automatically be converted into a man page and installed in your Perl
-tree for further reference, where it can be accessed via the command
-"man Data::Locations" (UNIX) or "perldoc Data::Locations" (UNIX and Win32).
-
-
 Credits:
 --------
 
@@ -127,49 +224,19 @@ Please refer to the file "CREDITS.txt" in this distribution for a list
 of contributors.
 
 
-Legal issues:
--------------
-
-This package with all its parts is
-
-Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
-All rights reserved.
-
-This package is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself, i.e., under the
-terms of the "Artistic License" or the "GNU General Public License".
-
-Please refer to the files "Artistic.txt" and "GNU_GPL.txt" in
-this distribution for details!
-
-
 Author's note:
 --------------
 
-I would be very pleased over *ANY* kind of feedback, questions,
-suggestions, donations ;-) and so on, since unfortunately none of
-you lazy bums ;-) (for exceptions to this see the "CREDITS.txt"
-file in this distribution!) hardly ever writes me.
+If you have any questions, suggestions or need any assistance, please
+let me know!
 
-This feedback is essential for me in order to know wether this
-module is useful, to estimate how many people use it and for
-what (essential to assess the potential impact an incompatible
-change may have, for instance), where its problems and weak-
-nesses lie, what should be improved, what additional features
-would be useful, etc.
+Please do send feedback, this is essential for improving this module
+according to your needs!
 
-Even e-mail with an empty body and just a subject line such as
-"I'm using Data::Locations" would help!
+I hope you will find this module useful. Enjoy!
 
-Thank you very much in advance!
-
-In any case, I hope you will find this module beneficial,
-share and enjoy!
-
-Yours sincerely,
+Yours,
 --
-    Steffen Beyer <sb@engelschall.com>
-    http://www.engelschall.com/u/sb/whoami/
-    http://www.engelschall.com/u/sb/download/
-    http://www.perl.com/CPAN/authors/id/STBEY/
-    http://www.oreilly.de/catalog/perlmodger/bnp/
+  Steffen Beyer <sb@engelschall.com> http://www.engelschall.com/u/sb/
+  "There is enough for the need of everyone in this world, but not
+   for the greed of everyone." - Mohandas Karamchand "Mahatma" Gandhi

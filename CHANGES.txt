@@ -1,16 +1,28 @@
                   =========================================
-                    Package "Data::Locations" Version 5.2
+                    Package "Data::Locations" Version 5.3
                   =========================================
 
 
-               Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
+                 Copyright (c) 1997 - 2004 by Steffen Beyer.
                              All rights reserved.
 
 
 Version history:
 ----------------
 
-Version 5.2   06.05.99
+Version 5.3   24.10.2004
+
+ +  Re-applied the refcount offset in "02___refcount.t" to
+    Perl versions >= 5.008005 in order to fix the failing
+    tests. See also version 5.1 below.
+
+Version 5.2a  19.03.2001
+
+ +  Restricted the refcount offset in "02___refcount.t" to
+    Perl versions >= 5.00503 and < 5.007 in order to fix
+    the failing tests. See also version 5.1 below.
+
+Version 5.2   06.05.1999
 
  +  Fixed a bug in method "read()" which prevented empty lines
     to be read back in list context (empty lines were mistaken
@@ -19,14 +31,14 @@ Version 5.2   06.05.99
     "read()" now returns the empty string instead. You would have
     mistaken this for the end-of-file marker in previous versions.
 
-Version 5.1   03.05.99
+Version 5.1   03.05.1999
 
  +  Fixed the test script "t/02___refcount.t" which failed under
     Perl 5.005_03 due to an incompatibility between this and all
     previous versions of Perl (self-referential ties do not
     increment the reference count of their tied object anymore).
 
-Version 5.0   28.04.99
+Version 5.0   28.04.1999
 
  +  All global or "class" methods (except "Data::Locations->new()",
     of course) are gone. This allows several modules to use this
@@ -46,7 +58,7 @@ Version 5.0   28.04.99
  +  The code in general, the regression test suite and the documentation
     have been overhauled a great deal.
 
-Version 4.3   25.02.99
+Version 4.3   25.02.1999
 
  +  Fixed the bug in "new()" which manifested itself with perl 5.005 and
     which caused ``print $location "Text";'' to fail.
@@ -55,7 +67,7 @@ Version 4.3   25.02.99
     has the exclusive use of the "Data::Locations" module.
  +  Finally managed to add a (still rudimentary) regression test suite.
 
-Version 4.2   07.09.98
+Version 4.2   07.09.1998
 
  +  Added a warning to the documentation that inheritance is a no-no with
     an example of how to use embedding/delegation instead.
@@ -64,7 +76,7 @@ Version 4.2   07.09.98
  +  Added the new attributes to "Makefile.PL" for ActiveState's port
     of Perl 5.005 to the Win32 platform.
 
-Version 4.1   06.06.98
+Version 4.1   06.06.1998
 
  +  Fixed "delete()" to clear the self-references which prevented the eventual
     garbage-collection.
@@ -75,7 +87,7 @@ Version 4.1   06.06.98
  +  Minor changes to make the code clearer and cleaner.
  +  "Bug fixes" and additions in the documentation.
 
-Version 4.0   23.05.98
+Version 4.0   23.05.1998
 
  +  Extensive rewrite of this module and its documentation.
  +  The companion modules "Tie::Handle", "Data::Locations::Proxy"
@@ -92,7 +104,7 @@ Version 4.0   23.05.98
     now automatically causes it to lose its "top-level" status, as
     opposed to previous versions of this module.
 
-Version 3.0   29.07.97
+Version 3.0   29.07.1997
 
  +  Added modules "Data::Locations::Proxy" and "Data::Locations::Shell"
     in order to make statements such as print $FH "text"; and $text = <$FH>;
@@ -100,11 +112,11 @@ Version 3.0   29.07.97
  +  The two methods "set_filename()" and "get_filename()" have been
     replaced by a single method, "filename()".
 
-Version 2.1   25.07.97
+Version 2.1   25.07.1997
 
  +  Intermediate development version not publicly released.
 
-Version 2.0   24.07.97
+Version 2.0   24.07.1997
 
  +  Changed the name of this module from "Locations" to "Data::Locations".
  +  Added new methods "printf()", "read()", "reset()" and "tie()".
@@ -113,11 +125,11 @@ Version 2.0   24.07.97
     Perl's built-in operators for accessing file handles instead of method
     calls.
 
-Version 1.2   18.07.97
+Version 1.2   18.07.1997
 
  +  Intermediate development version not publicly released.
 
-Version 1.1   16.07.97
+Version 1.1   16.07.1997
 
  +  Fixed a bug in the automatic detection of potential infinite recursions.
     (This bug did not cause any malfunction, but degraded performance
@@ -125,7 +137,7 @@ Version 1.1   16.07.97
  +  Cleanup of the code of remnants such as "carp - exit" instead of "croak".
  +  Improved the documentation.
 
-Version 1.0   14.07.97
+Version 1.0   14.07.1997
 
  +  First release.
 

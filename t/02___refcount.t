@@ -1,7 +1,5 @@
 #!perl -w
 
-# t/02___refcount.....FAILED tests 5, 7, 9, 11, 13, 15, 37-38
-
 use strict;
 no strict "vars";
 
@@ -18,8 +16,12 @@ print "1..40\n";
 
 $n = 1;
 
+# Fixing
+# t/02___refcount.....FAILED tests 5, 7, 9, 11, 13, 15, 37-38
+
 $fix =  0;
-$fix = -1 if ($] >= 5.00503 && $] < 5.007);
+$fix = -1 if ((($] >= 5.00503) and ($] < 5.007)) or
+               ($] >= 5.008005));
 
 no strict "refs";
 $loc = \*{'Data::Locations::LOCATION'};
