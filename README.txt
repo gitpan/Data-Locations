@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.2
+                    Package "Data::Locations" Version 4.4
                   =========================================
 
 
@@ -15,22 +15,7 @@ or from any CPAN (= "Comprehensive Perl Archive Network") mirror server:
 Prerequisites:
 --------------
 
-Perl version 5.004 (subversion 0) or higher, and a C compiler.
-
-
-Changes:
---------
-
-Please refer to the file "CHANGES.txt" in this distribution for a version
-history of changes and the list of incompatible changes with respect to
-previous versions.
-
-
-Installation:
--------------
-
-Please see the file "INSTALL.txt" in this distribution for installation
-instructions.
+Perl version 5.004 (subversion 0) or higher.
 
 
 What does it do:
@@ -47,17 +32,17 @@ Did you also have to resort to cumbersome and tedious measures such
 as storing the first and the last part of your data separately, then
 producing the missing middle part, and finally putting it all together?
 
-In this simple case, involving only one deferred insertion, you might
+In this simple case, involving only one later-on-insertion, you might
 still put up with this solution.
 
-But if there is more than one deferred insertion, requiring the handling
+But if there is more than one later-on-insertion, requiring the handling
 of many fragments of data, you will probably get annoyed and frustrated.
 
 You might even have to struggle with limitations of the file system of
 your operating system, or handling so many files might considerably slow
 down your application due to excessive file input/output.
 
-And if you don't know exactly beforehand how many deferred insertions
+And if you don't know exactly beforehand how many later-on-insertions
 there will be (if this depends dynamically on the data being processed),
 and/or if the pieces of data you need to insert need additional (nested)
 insertions themselves, things will get really tricky, messy and troublesome.
@@ -92,32 +77,43 @@ And you can of course also read from these virtual files, at any time,
 in order to see the data that a given virtual file currently contains.
 
 When you are finished filling in all the different parts of your virtual
-file, you can write out its contents in flattened form to a physical, real
-file this time, or process it otherwise (purely in memory, if you wish).
+file, you can write its contents to a physical, real file this time, or
+process it otherwise (purely in memory, if you wish).
 
-You can also think of "Data::Locations" as bubbles and bubbles inside
-of other bubbles. You can inflate these bubbles in any arbitrary order
-you like through a straw (i.e., the bubble's object reference).
-
-Note that this module handles your data completely transparently, which
+Note that this module handles your data completely transparent, which
 means that you can use it equally well for text AND binary data.
 
-You might also be interested in knowing that this module and its concept
-have already been heavily used in the automatic code generation of large
-software projects.
+You might also be interested to know that this module and its concept
+has already heavily been put to use in the automatic code generation
+of large software projects.
+
+
+Installation:
+-------------
+
+Please see the file "INSTALL.txt" in this distribution for installation
+instructions.
+
+
+Changes:
+--------
+
+Please refer to the file "CHANGES.txt" in this distribution for a version
+history of changes and possible incompatibilities.
 
 
 Documentation:
 --------------
 
-The documentation of this package is included in POD format (= "Plain
-Old Documentation") in the file "Locations.pm" in this distribution,
-the human-readable markup-language standard for Perl documentation.
+The documentation to this package is included in POD format (= "Plain Old
+Documentation") in the file "Locations.pm" in this distribution, the human-
+readable markup-language standard for Perl documentation.
 
-By building and installing this package, this documentation will
-automatically be converted into a man page and installed in your Perl
-tree for further reference, where it can be accessed via the command
-"man Data::Locations" (UNIX) or "perldoc Data::Locations" (UNIX and Win32).
+By building this package, this documentation will automatically be converted
+into a man page, which will also automatically be installed in your Perl tree
+for further reference during installation, where it can be accessed via the
+command "man Data::Locations" (UNIX) or "perldoc Data::Locations" (UNIX and
+Win32).
 
 
 Credits:
@@ -146,30 +142,13 @@ this distribution for details!
 Author's note:
 --------------
 
-I would be very pleased over *ANY* kind of feedback, questions,
-suggestions, donations ;-) and so on, since unfortunately none of
-you lazy bums ;-) (for exceptions to this see the "CREDITS.txt"
-file in this distribution!) hardly ever writes me.
+If you have any questions, suggestions or need any assistance, please
+let me know!
 
-This feedback is essential for me in order to know wether this
-module is useful, to estimate how many people use it and for
-what (essential to assess the potential impact an incompatible
-change may have, for instance), where its problems and weak-
-nesses lie, what should be improved, what additional features
-would be useful, etc.
+I hope you will find this module beneficial!
 
-Even e-mail with an empty body and just a subject line such as
-"I'm using Data::Locations" would help!
-
-Thank you very much in advance!
-
-In any case, I hope you will find this module beneficial,
-share and enjoy!
-
-Yours sincerely,
+Yours,
 --
-    Steffen Beyer <sb@engelschall.com>
-    http://www.engelschall.com/u/sb/whoami/
-    http://www.engelschall.com/u/sb/download/
-    http://www.perl.com/CPAN/authors/id/STBEY/
-    http://www.oreilly.de/catalog/perlmodger/bnp/
+  Steffen Beyer <sb@engelschall.com> http://www.engelschall.com/u/sb/
+       "There is enough for the need of everyone in this world,
+         but not for the greed of everyone." - Mahatma Gandhi

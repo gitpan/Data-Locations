@@ -8,6 +8,7 @@ use Data::Locations;
 # ======================================================================
 #   $toplocation = Data::Locations->new();
 #   $sublocation = $location->new();
+#   $location->filename($filename);
 #   $location->print(@items);
 #   $location->print($sublocation);
 #   @list = $location->read();
@@ -93,7 +94,16 @@ if ($txt eq $ref)
 $n++;
 
 $str = '';
-$file->traverse( sub { $str .= $_[0]; } );
+Data::Locations->traverse
+(
+    sub
+    {
+        $_[0]->traverse
+        (
+            sub { $str .= $_[0]; }
+        )
+    } 
+);
 
 if ($str eq $txt)
 {print "ok $n\n";} else {print "not ok $n\n";}

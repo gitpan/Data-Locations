@@ -11,106 +11,75 @@
 
 package Data::Locations;
 
-use 5.004;
 use strict;
-use vars qw(@ISA $VERSION);
+use vars qw($VERSION);
 
-use Carp ();
-use Symbol ();
-use DynaLoader ();
+use Carp;
+use Symbol;
 
-@ISA = qw(DynaLoader);
+$VERSION = "4.4";
 
-$VERSION = "5.2";
+my $Dummy = '[Error: stale reference!]';  ##  Dummy class name
 
-DynaLoader::bootstrap Data::Locations $VERSION;
+my $Class = 'Data::Locations';            ##  This class's name
 
-my $Class = __PACKAGE__;    ##  This class's name
-my $Table = $Class . '::';  ##  This class's symbol table
+my $Count = 0;                            ##  Counter of all existing locations
 
-my $Count = 0;  ##  Counter for generating unique names for all locations
-my $Alive = 1;  ##  Flag for disabling auto-dump during global destruction
-
-  *print  = \&PRINT;        ##  Define public aliases for internal methods
-  *printf = \&PRINTF;
-  *read   = \&READLINE;
-
-sub _usage_
-{
-    my($text) = @_;
-
-    Carp::croak("Usage: $text");
-}
-
-sub _error_
-{
-    my($name,$text) = @_;
-
-    Carp::croak("${Table}${name}(): $text");
-}
-
-sub _alert_
-{
-    my($name,$text) = @_;
-
-    Carp::carp("${Table}${name}(): $text") if $^W;
-}
-
-sub _check_filename_
-{
-    my($name,$file) = @_;
-
-    if (defined $file)
-    {
-        if (ref($file))
-        {
-            &_error_($name, "reference not allowed as filename");
-        }
-        else
-        {
-            if ($file !~ /^\s*$/) { return "$file"; }
-        }
-    }
-    return '';
-}
+BEGIN { *print = \&PRINT; *printf = \&PRINTF; *read = \&READLINE; }
 
 sub new
 {
-  &_usage_("\$[top|sub]location = [$Class|\$location]->new( [ \$filename ] );")
-    if ((@_ < 1) || (@_ > 2));
+    croak
+    "Usage: \$[top|sub]location = [$Class|\$location]->new( [ \$filename ] );\n"
+      if ((@_ < 1) || (@_ > 2));
 
     my($outer) = shift;
     my($file,$name,$inner);
 
     $file = '';
     $file = shift if (@_ > 0);
-    $file = &_check_filename_('new', $file);
-
-    $name = 'LOCATION' . $Count++;   ##  Generate a unique name
-no strict "refs";
-    $inner = \*{$Table . $name};     ##  Create a reference of glob value
-use strict "refs";
-    bless($inner, $Class);           ##  Bless glob to become an object
-    tie(*{$inner}, $Class, $inner);  ##  Tie glob to itself
-    ${*{$inner}} = $inner;           ##  Use $ slot of glob for self-ref
-    @{*{$inner}} = ();               ##  Use @ slot of glob for the data
-    %{*{$inner}} = ();               ##  Use % slot of glob for obj attributes
-
-    ${*{$inner}}{'name'} = $name;    ##  Also keep symbolic self-ref
-    ${*{$inner}}{'file'} = $file;    ##  Store filename (is auto-dump flag)
-
-    ${*{$inner}}{'outer'} = {};      ##  List of surrounding locations
-    ${*{$inner}}{'inner'} = {};      ##  List of embedded locations
-
-    ##  Enable destruction when last user ref goes out of scope:
-
-    ${*{$inner}}{'refs'} = &_mortalize_($inner);
-
-    if (ref($outer))  ##  Object method (or else class method)
+    if (defined $file)
     {
-        ${${*{$inner}}{'outer'}}{${*{$outer}}{'name'}} = 1;
-        ${${*{$outer}}{'inner'}}{${*{$inner}}{'name'}} = 1;
+        if (ref($file))
+        {
+            croak "${Class}::new(): reference not allowed as filename";
+        }
+        else { $file = "$file"; }
+    }
+    else { $file = ''; }
+
+    $name = 'LOCATION' . $Count++;   ## Generate a unique name
+
+no strict "refs";
+    $inner = \*{$Class.'::'.$name};  ## Create a reference to glob value
+use strict "refs";
+
+    bless($inner, $Class);           ## Bless glob to become an object
+
+    tie(*{$inner}, $Class, $inner);  ## Tie glob to itself
+
+    ${*{$inner}} = $inner;           ## Store copy of ref in $ slot of glob
+
+    @{*{$inner}} = ( );              ## Use @ slot of glob for the data
+
+    ${*{$inner}}{'file'}  = $file;   ## Use % slot for object attributes
+    ${*{$inner}}{'outer'} = { };
+    ${*{$inner}}{'inner'} = { };
+    ${*{$inner}}{'top'}   = 0;
+
+    ##  Note that $hash{$ref} is exactly the same as $hash{"$ref"}
+    ##  because references are automatically converted to strings
+    ##  when they are used as keys of a hash!
+
+    if (ref($outer))  ##  Object method
+    {
         push(@{*{$outer}}, $inner);
+        ${*{$outer}}{'inner'}{$inner} = $inner;
+        ${*{$inner}}{'outer'}{$outer} = $outer;
+    }
+    else              ##  Class method
+    {
+        ${*{$inner}}{'top'} = 1;
     }
     return $inner;
 }
@@ -120,124 +89,49 @@ sub TIEHANDLE
     return $_[1];
 }
 
-sub CLOSE
-{
-    &_alert_("close", "operation ignored");
-}
-
-sub _unlink_outer_
-{
-    my($inner) = @_;
-    my($name,$list,$item);
-
-    $name = ${*{$inner}}{'name'};
-    $list = ${*{$inner}}{'outer'};
-    foreach $item (keys %{$list})
-    {
-        if (exists $Data::Locations::{$item})
-        {
-            delete ${${*{ $Data::Locations::{$item} }}{'inner'}}{$name};
-        }
-    }
-    ${*{$inner}}{'outer'} = {};
-}
-
-sub _unlink_inner_
-{
-    my($outer) = @_;
-    my($name,$list,$item);
-
-    $name = ${*{$outer}}{'name'};
-    $list = ${*{$outer}}{'inner'};
-    foreach $item (keys %{$list})
-    {
-        if (exists $Data::Locations::{$item})
-        {
-            delete ${${*{ $Data::Locations::{$item} }}{'outer'}}{$name};
-        }
-    }
-    ${*{$outer}}{'inner'} = {};
-}
-
-sub delete
-{
-    &_usage_('$location->delete();')
-      if ((@_ != 1) || !ref($_[0]));
-
-    my($location) = @_;
-
-    &_unlink_inner_($location);
-    delete ${*{$location}}{'stack'};
-    @{*{$location}} = ();
-}
-
-sub DESTROY
-{
-    my($location) = @_;
-
-    if ($Alive)
-    {
-        if (${*{$location}}{'file'} ne '')
-        {
-            &dump($location);
-        }
-        &_unlink_outer_($location);
-        &_unlink_inner_($location);
-        &_resurrect_($location, ${*{$location}}{'refs'});
-        delete $Data::Locations::{ ${*{$location}}{'name'} };
-        { local($^W) = 0; untie(*{$location}); }
-        undef ${*{$location}};
-        undef %{*{$location}};
-        undef @{*{$location}};
-    }
-}
-
-sub END
-{
-    my($item,$location);
-
-    ##  Disable auto-dump during global destruction and dump all relevant
-    ##  locations here while all their embedded sublocations still exist
-    ##  (because global destruction destroys in random order!):
-
-    $Alive = 0;
-
-    foreach $item (keys %Data::Locations::)
-    {
-        if ($item =~ /^LOCATION\d+$/)
-        {
-            $location = ${*{ $Data::Locations::{$item} }};
-            if (${*{$location}}{'file'} ne '')
-            {
-                &dump($location);
-            }
-            &_resurrect_($location, ${*{$location}}{'refs'});
-        }
-    }
-}
-
 sub filename
 {
-    &_usage_('$filename = $location->filename( [ $filename ] );')
-      if ((@_ < 1) || (@_ > 2) || !ref($_[0]));
+    croak "Usage: [ \$filename = ] \$location->filename( [ \$filename ] );\n"
+      if ((@_ < 1) || (@_ > 2));
 
     my($location) = shift;
     my($file);
 
-    $file = ${*{$location}}{'file'};
     if (@_ > 0)
     {
-        ${*{$location}}{'file'} = &_check_filename_('filename', $_[0]);
+        $file = shift;
+        if (defined $file)
+        {
+            if (ref($file))
+            {
+                croak "${Class}::filename(): reference not allowed as filename";
+            }
+            else { $file = "$file"; }
+        }
+        else { $file = ''; }
+        ${*{$location}}{'file'} = $file;
     }
-    return $file;
+    else
+    {
+        return ${*{$location}}{'file'};
+    }
 }
 
 sub toplevel
 {
-    &_usage_('$flag = $location->toplevel();')
-      if ((@_ != 1) || !ref($_[0]));
+    croak "Usage: [ \$flag = ] \$location->toplevel( [ \$flag ] );\n"
+      if ((@_ < 1) || (@_ > 2));
 
-    return ! keys(%{${*{$_[0]}}{'outer'}});
+    my($location) = shift;
+
+    if (@_ > 0)
+    {
+        ${*{$location}}{'top'} = $_[0] & 1;
+    }
+    else
+    {
+        return ${*{$location}}{'top'};
+    }
 }
 
 sub _self_contained_
@@ -245,23 +139,20 @@ sub _self_contained_
     my($outer,$inner) = @_;
     my($list,$item);
 
-    return 1 if ($outer == $inner);
-    $list = ${*{$outer}}{'outer'};
+    return 1 if ($outer eq $inner);
+    $list = ${*{$inner}}{'inner'};
     foreach $item (keys %{$list})
     {
-        if (exists $Data::Locations::{$item})
-        {
-            $outer = ${*{ $Data::Locations::{$item} }};
-            return 1 if (&_self_contained_($outer,$inner));
-        }
+        $inner = ${$list}{$item};
+        return 1 if (&_self_contained_($outer,$inner));
     }
     return 0;
 }
 
 sub PRINT  ##  Aliased to "print"
 {
-    &_usage_('$location->print(@items);')
-      if ((@_ < 1) || !ref($_[0]));
+    croak "Usage: \$location->print(\@items);\n"
+      if (@_ < 1);
 
     my($outer) = shift;
     my($inner);
@@ -273,42 +164,48 @@ sub PRINT  ##  Aliased to "print"
         {
             if (ref($inner) ne $Class)
             {
-                &_alert_("print", ref($inner) . " reference ignored");
+                carp "${Class}::print(): reference '".ref($inner)."' ignored"
+                  if $^W;
                 next ITEM;
             }
             if (&_self_contained_($outer,$inner))
             {
-                &_error_("print", "infinite recursion loop attempted");
+                croak "${Class}::print(): infinite recursion loop attempted";
             }
             else
             {
-                ${${*{$inner}}{'outer'}}{${*{$outer}}{'name'}} = 1;
-                ${${*{$outer}}{'inner'}}{${*{$inner}}{'name'}} = 1;
+                push(@{*{$outer}}, $inner);
+                ${*{$outer}}{'inner'}{$inner} = $inner;
+                ${*{$inner}}{'outer'}{$outer} = $outer;
+                ${*{$inner}}{'top'} = 0;
             }
         }
-        push(@{*{$outer}}, $inner);
+        else
+        {
+            push(@{*{$outer}}, $inner);
+        }
     }
 }
 
 sub PRINTF  ##  Aliased to "printf"
 {
-    &_usage_('$location->printf($format, @items);')
-      if ((@_ < 2) || !ref($_[0]));
+    croak "Usage: \$location->printf(\$format, \@items);\n"
+      if (@_ < 2);
 
     my($location) = shift;
     my($format) = shift;
 
-    &print( $location, sprintf($format, @_) );
+    $location->print( sprintf($format, @_) );
 }
 
 sub println
 {
-    &_usage_('$location->println(@items);')
-      if ((@_ < 1) || !ref($_[0]));
+    croak "Usage: \$location->println(\@items);\n"
+      if (@_ < 1);
 
     my($location) = shift;
 
-    &print( $location, @_, "\n" );
+    $location->print(@_, "\n");
 
     ##  We use a separate "\n" here (instead of concatenating it
     ##  with the last item) in case the last item is a reference!
@@ -317,7 +214,7 @@ sub println
 sub _read_item_
 {
     my($location) = @_;
-    my($stack,$first,$index,$which,$item);
+    my($stack,$entry,$index,$where,$item);
 
     if (exists ${*{$location}}{'stack'})
     {
@@ -325,27 +222,26 @@ sub _read_item_
     }
     else
     {
-        $stack = [ [ 0, ${*{$location}}{'name'} ] ];
+        $stack = [ [ 0, $location ] ];
         ${*{$location}}{'stack'} = $stack;
     }
 
     if (@{$stack})
     {
-        $first = ${$stack}[0];
-        $index = ${$first}[0];
-        $which = ${$first}[1];
-        if ((exists $Data::Locations::{$which}) &&
-            ($index < @{*{ $Data::Locations::{$which} }}))
+        $entry = ${$stack}[0];
+        $index = ${$entry}[0];
+        $where = ${$entry}[1];
+        if ((ref($where) eq $Class) && ($index < @{*{$where}}))
         {
-            $item = ${*{ $Data::Locations::{$which} }}[$index];
-            ${$first}[0]++;
+            $item = ${*{$where}}[$index];
+            ${$entry}[0]++;
             if (defined $item)
             {
                 if (ref($item))
                 {
                     if (ref($item) eq $Class)
                     {
-                        unshift(@{$stack}, [ 0, ${*{$item}}{'name'} ]);
+                        unshift(@{$stack}, [ 0, $item ]);
                     }
                     return &_read_item_($location);
                 }
@@ -377,10 +273,10 @@ sub _read_list_
 
 sub READLINE  ##  Aliased to "read"
 {
-    &_usage_('[ $item | @list ] = $location->read();')
-      if ((@_ != 1) || !ref($_[0]));
+    croak "Usage: [ \$item | \@list ] = \$location->read();\n"
+      if (@_ != 1);
 
-    my($location) = @_;
+    my($location) = shift;
 
     if (defined wantarray)
     {
@@ -397,16 +293,36 @@ sub READLINE  ##  Aliased to "read"
 
 sub reset
 {
-    &_usage_('$location->reset();')
-      if ((@_ != 1) || !ref($_[0]));
+    croak "Usage: [$Class|\$location]->reset();\n"
+      if (@_ != 1);
 
-    delete ${*{$_[0]}}{'stack'};
+    my($location) = @_;
+
+    if (ref($location))  ##  Object method
+    {
+        delete ${*{$location}}{'stack'};
+    }
+    else                 ##  Class method
+    {
+        foreach $location (keys %Data::Locations::)
+        {
+            if ($location =~ /^LOCATION\d+$/)
+            {
+                delete ${*{$Data::Locations::{$location}}}{'stack'};
+            }
+        }
+    }
 }
 
 sub _traverse_recursive_
 {
     my($location,$callback) = @_;
     my($item);
+
+    if (ref($callback) ne 'CODE')
+    {
+        croak "${Class}::traverse(): not a code reference";
+    }
 
     foreach $item (@{*{$location}})
     {
@@ -426,16 +342,33 @@ sub _traverse_recursive_
 
 sub traverse
 {
-    &_usage_('$location->traverse(\&callback_function);')
-      if ((@_ != 2) || !ref($_[0]));
+    croak "Usage: [$Class|\$location]->traverse(\\&callback_function);\n"
+      if (@_ != 2);
 
     my($location,$callback) = @_;
 
     if (ref($callback) ne 'CODE')
     {
-        &_error_("traverse", "not a code reference");
+        croak "${Class}::traverse(): not a code reference";
     }
-    &_traverse_recursive_($location,$callback);
+
+    if (ref($location))  ##  Object method
+    {
+        &_traverse_recursive_($location,$callback);
+    }
+    else                 ##  Class method
+    {
+        foreach $location (keys %Data::Locations::)
+        {
+            if ($location =~ /^LOCATION\d+$/)
+            {
+                if (${*{$Data::Locations::{$location}}}{'top'})
+                {
+                    &{$callback}( ${*{$Data::Locations::{$location}}} );
+                }
+            }
+        }
+    }
 }
 
 sub _dump_recursive_
@@ -459,23 +392,27 @@ sub _dump_recursive_
     }
 }
 
-sub dump
+sub _dump_location_
 {
-    &_usage_('$ok = $location->dump( [ $filename ] );')
-      if ((@_ < 1) || (@_ > 2) || !ref($_[0]));
-
+    local(*FILEHANDLE);
     my($location) = shift;
     my($file);
 
-    local(*FILEHANDLE);
-
     $file = ${*{$location}}{'file'};
     $file = shift if (@_ > 0);
-    $file = &_check_filename_('dump', $file);
+    if (defined $file)
+    {
+        if (ref($file))
+        {
+            croak "${Class}::dump(): reference not allowed as filename";
+        }
+        else { $file = "$file"; }
+    }
+    else { $file = ''; }
 
     if ($file =~ /^\s*$/)
     {
-        &_alert_("dump", "filename missing or empty");
+        carp "${Class}::dump(): filename missing or empty" if $^W;
         return 0;
     }
     unless ($file =~ /^\s*[>\|+]/)
@@ -484,22 +421,104 @@ sub dump
     }
     unless (open(FILEHANDLE, $file))
     {
-        &_alert_("dump", "can't open file '$file': \L$!\E");
+        carp "${Class}::dump(): can't open file '$file': \L$!\E" if $^W;
         return 0;
     }
     &_dump_recursive_($location,*FILEHANDLE);
     unless (close(FILEHANDLE))
     {
-        &_alert_("dump", "can't close file '$file': \L$!\E");
+        carp "${Class}::dump(): can't close file '$file': \L$!\E" if $^W;
         return 0;
     }
     return 1;
 }
 
+sub dump
+{
+    croak
+    "Usage: \$ok = [ $Class->dump(); | \$location->dump( [ \$filename ] ); ]\n"
+      if ((@_ < 1) || (@_ > 2) || ((@_ == 2) && !ref($_[0])));
+
+    my($location) = shift;
+    my($ok);
+
+    if (ref($location))  ##  Object method
+    {
+        if (@_ > 0)
+        {
+            return &_dump_location_($location,$_[0]);
+        }
+        else
+        {
+            return &_dump_location_($location);
+        }
+    }
+    else                 ##  Class method
+    {
+        $ok = 1;
+        foreach $location (keys %Data::Locations::)
+        {
+            if ($location =~ /^LOCATION\d+$/)
+            {
+                if (${*{$Data::Locations::{$location}}}{'top'})
+                {
+                    $ok = 0 unless
+                      &_dump_location_( ${*{$Data::Locations::{$location}}} );
+                }
+            }
+        }
+        return $ok;
+    }
+}
+
+sub delete
+{
+    croak "Usage: [$Class|\$location]->delete();\n"
+      if (@_ != 1);
+
+    my($outer) = shift;
+    my($list,$item,$inner,$link);
+
+    if (ref($outer))  ##  Object method
+    {
+        $list = ${*{$outer}}{'inner'};
+        foreach $item (keys %{$list})
+        {
+            $inner = ${$list}{$item};
+            $link = ${*{$inner}}{'outer'};
+            delete ${$link}{$outer};
+            unless (%{$link})
+            {
+                ${*{$inner}}{'top'} = 1;
+            }
+        }
+        @{*{$outer}} = ( );
+        ${*{$outer}}{'inner'} = { };
+        delete ${*{$outer}}{'stack'};
+    }
+    else              ##  Class method
+    {
+        foreach $item (keys %Data::Locations::)
+        {
+            if ($item =~ /^LOCATION\d+$/)
+            {
+                bless( \*{$Data::Locations::{$item}},  ## Prevent further use
+                  $Dummy);
+                undef ${*{$Data::Locations::{$item}}}; ## Break self-reference
+                undef @{*{$Data::Locations::{$item}}}; ## Free memory (data!)
+                undef %{*{$Data::Locations::{$item}}}; ## Clear obj attributes
+                delete $Data::Locations::{$item};      ## Remove symtab entry
+            }
+        }
+        $Count = 0;
+    }
+}
+
 sub tie
 {
-    &_usage_('$location->tie( [ "FH" | *FH | \*FH | *{FH} | \*{FH} | $fh ] );')
-      if ((@_ != 2) || !ref($_[0]));
+    croak
+  "Usage: \$location->tie( [ 'FH' | *FH | \\*FH | *{FH} | \\*{FH} | \$fh ] );\n"
+      if (@_ != 2);
 
     my($location,$filehandle) = @_;
 
@@ -529,17 +548,17 @@ Did you also have to resort to cumbersome and tedious measures such
 as storing the first and the last part of your data separately, then
 producing the missing middle part, and finally putting it all together?
 
-In this simple case, involving only one deferred insertion, you might
+In this simple case, involving only one later-on-insertion, you might
 still put up with this solution.
 
-But if there is more than one deferred insertion, requiring the handling
+But if there is more than one later-on-insertion, requiring the handling
 of many fragments of data, you will probably get annoyed and frustrated.
 
 You might even have to struggle with limitations of the file system of
 your operating system, or handling so many files might considerably slow
 down your application due to excessive file input/output.
 
-And if you don't know exactly beforehand how many deferred insertions
+And if you don't know exactly beforehand how many later-on-insertions
 there will be (if this depends dynamically on the data being processed),
 and/or if the pieces of data you need to insert need additional (nested)
 insertions themselves, things will get really tricky, messy and troublesome.
@@ -574,19 +593,15 @@ And you can of course also read from these virtual files, at any time,
 in order to see the data that a given virtual file currently contains.
 
 When you are finished filling in all the different parts of your virtual
-file, you can write out its contents in flattened form to a physical, real
-file this time, or process it otherwise (purely in memory, if you wish).
+file, you can write its contents to a physical, real file this time, or
+process it otherwise (purely in memory, if you wish).
 
-You can also think of "C<Data::Locations>" as bubbles and bubbles inside
-of other bubbles. You can inflate these bubbles in any arbitrary order
-you like through a straw (i.e., the bubble's object reference).
-
-Note that this module handles your data completely transparently, which
+Note that this module handles your data completely transparent, which
 means that you can use it equally well for text AND binary data.
 
-You might also be interested in knowing that this module and its concept
-have already been heavily used in the automatic code generation of large
-software projects.
+You might also be interested to know that this module and its concept
+has already heavily been put to use in the automatic code generation
+of large software projects.
 
 =head1 SYNOPSIS
 
@@ -601,10 +616,10 @@ software projects.
   filename
       $location->filename($filename);
       $filename = $location->filename();
-      $oldfilename = $location->filename($newfilename);
 
   toplevel
       $flag = $location->toplevel();
+      $location->toplevel($flag);
 
   print
       $location->print(@items);
@@ -624,16 +639,20 @@ software projects.
       @list = <$location>;
 
   reset
+      Data::Locations->reset();
       $location->reset();
 
   traverse
+      Data::Locations->traverse(\&callback_function);
       $location->traverse(\&callback_function);
 
   dump
+      $ok = Data::Locations->dump();
       $ok = $location->dump();
       $ok = $location->dump($filename);
 
   delete
+      Data::Locations->delete();
       $location->delete();
 
   tie
@@ -643,150 +662,46 @@ software projects.
       $location->tie(*{FILEHANDLE});
       $location->tie(\*{FILEHANDLE});
       $location->tie($filehandle);
-      tie(  *FILEHANDLE,  "Data::Locations", $location);
-      tie(*{$filehandle}, "Data::Locations", $location);
+      tie(*FILEHANDLE, "Data::Locations", $location);
+      tie($filehandle, "Data::Locations", $location);
 
   tied
-      $location = tied   *FILEHANDLE;
-      $location = tied *{$filehandle};
+      $location = tied *FILEHANDLE;
+      $location = tied $filehandle;
 
   untie
-      untie   *FILEHANDLE;
-      untie *{$filehandle};
+      untie *FILEHANDLE;
+      untie $filehandle;
 
   select
       $filehandle = select();
       select($location);
       $oldfilehandle = select($newlocation);
 
-=head1 IMPORTANT NOTES
+=head1 LIMITATIONS
 
-=over 3
+In the current implementation of this module, locations are global
+variables and do not automatically destroy themselves when your
+last reference to one of them goes out of scope.
 
-=item 1)
+This is mainly due to the fact that, in the current implementation,
+locations contain self-references, which are essential in order to
+be able to use locations as file handles and objects simultaneously.
 
-Although "C<Data::Locations>" behave like normal Perl file handles
-in most circumstances, opening a location with "C<open()>" should
-be avoided: The corresponding file or pipe will actually be created,
-but subsequently data will nevertheless be sent to (and read from)
-the given location instead.
+Because locations are global variables, and because some (class)
+methods (see the section DESCRIPTION below for details) act on ALL
+locations, there may be undesirable side effects if more than one
+module is using locations at the same time, i.e., in the same program.
 
-There is also no need to switch from read to write mode (or vice-versa),
-since locations are ALWAYS open BOTH for reading AND writing.
+For instance dumping all locations from one module using the class method
+"C<dump()>" will also dump the locations of all other modules.
 
-If you want to rewind a location to start reading at the beginning
-again (usually achieved by closing and re-opening a file), use the
-method "C<reset()>" instead (see farther below for a description).
-
-Likewise, closing a location with "C<close()>" will have no other
-effect than to produce a warning message (under Perl 5.005 and if
-the "C<-w>" switch is set) saying "operation ignored", and should
-therefore be avoided, too.
-
-=item 2)
-
-"C<Data::Locations>" are rather delicate objects; they are valid Perl
-file handles AS WELL AS valid Perl objects AT THE SAME TIME.
-
-As a consequence, B<YOU CANNOT INHERIT> from the "C<Data::Locations>"
-class, i.e., it is NOT possible to create a derived class or subclass
-of the "C<Data::Locations>" class!
-
-Trying to do so will cause many severe malfunctions, most of which
-will not be apparent immediately.
-
-Chances are also great that by adding new attributes to a
-"C<Data::Locations>" object you will clobber its (quite tricky)
-data structure.
-
-Therefore, use embedding and delegation instead, rather than
-inheritance, as shown below:
-
-  package My::Class;
-  use Data::Locations;
-  use Carp;
-
-  sub new
-  {
-      my($self) = shift;
-      my($location,$object);
-      if (ref($self)) { $location = $self->{'delegate'}->new(); }
-      else            { $location =     Data::Locations->new(); }
-      $object =
-          {
-              'delegate'   => $location,
-              'attribute1' => $whatever,  ##  add your own
-              'attribute2' => $whatelse
-          };
-      bless($object, ref($self) || $self || __PACKAGE__);
-  }
-
-  sub AUTOLOAD
-  {
-      my($i,@args);
-      $AUTOLOAD =~ s/^.*:://;
-      return if ($AUTOLOAD eq 'DESTROY');
-      $AUTOLOAD = 'Data::Locations::' . $AUTOLOAD;
-      if (defined &$AUTOLOAD)
-      {
-          for ( $i = 0; $i < @_; $i++ )
-          {
-              if (ref($_[$i]) eq __PACKAGE__)
-              {
-                  $args[$i] = $_[$i]->{'delegate'};
-              }
-              else
-              {
-                  $args[$i] = $_[$i];
-              }
-          }
-          @_ = @args;
-          goto &$AUTOLOAD;
-      }
-      else
-      {
-          croak("$AUTOLOAD(): no such method");
-      }
-  }
-
-  1;
-
-Note that using this scheme, all methods available for
-"C<Data::Locations>" objects are also (automatically and
-directly) available for "C<My::Class>" objects, i.e.,
-
-  use My::Class;
-  $obj = My::Class->new();
-  $obj->filename('test.txt');
-  $obj->print("This is ");
-  $sub = $obj->new();
-  $obj->print("information.");
-  @items = $obj->read();
-  print "<", join('|', @items), ">\n";
-  $sub->print("an additional piece of ");
-  $obj->reset();
-  @items = $obj->read();
-  print "<", join('|', @items), ">\n";
-  $obj->dump();
-
-will work as expected (unless you redefine these methods in
-"C<My::Class>").
-
-Moreover, with this scheme, you are free to add new methods
-and/or attributes as you please.
-
-The class "C<My::Class>" can also be subclassed without any
-restrictions.
-
-However, "C<My::Class>" objects are NOT valid Perl file handles;
-therefore, they cannot be used as such in combination with Perl's
-built-in operators for file access.
-
-=back
+Truly local locations are on the wish list for the next major release
+(version 5.0) of this module. Stay tuned.
 
 =head1 DESCRIPTION
 
-=over 3
+=over 4
 
 =item *
 
@@ -803,17 +718,23 @@ The CLASS METHOD "C<new()>" creates a new top-level location.
 A "top-level" location is a location which isn't embedded (nested)
 in any other location.
 
-Note that CLASS METHODS are invoked using the NAME of their respective
-class, i.e., "C<Data::Locations>" in this case, in contrast to OBJECT
-METHODS which are invoked using an OBJECT REFERENCE such as returned
-by the class's object constructor method (which "C<new()>" happens to be).
+Note that CLASS METHODS are invoked using the NAME of their class, i.e.,
+"C<Data::Locations>" in this case, in contrast to OBJECT METHODS which
+are invoked using an object REFERENCE such as returned by the class's
+object constructor method (which "C<new()>" happens to be).
 
-Any location that you intend to dump to a file later on in your program
-needs to have a filename associated with it, which you can either specify
-using the "C<new()>" method (where you can optionally supply a filename,
-as shown below), or by setting this filename using the method "C<filename()>"
-(see further below), or by specifying an explicit filename when invoking
-the "C<dump()>" method itself (see also further below).
+Any location that you intend to dump to a file later on in your program needs
+to have a filename associated with it, which you can either specify using one
+of the variants of the "C<new()>" method where you supply a filename (as the
+one shown immediately below), or by setting this filename using the method
+"C<filename()>" (see further below), or by specifying an explicit filename
+when invoking the "C<dump()>" method itself (see also further below) on
+a particular location.
+
+Otherwise an error will occur when you try to dump the location (in fact,
+a warning message is printed to the screen (if the "C<-w>" switch is set)
+and the location will simply not be dumped to a file, but program execution
+continues).
 
 =item *
 
@@ -827,9 +748,9 @@ Note that this filename is simply passed through to the Perl "C<open()>"
 function later on (which is called internally when you dump your locations
 to a file), which means that any legal Perl filename may be used such as
 ">-" (for writing to STDOUT) and "| more", to give you just two of the
-more exotic examples.
+more exotic examples!
 
-See the section on "C<open()>" in L<perlfunc(1)> for more details.
+See the section on "C<open()>" in L<perlfunc(1)> for more details!
 
 =item *
 
@@ -839,13 +760,13 @@ The OBJECT METHOD "C<new()>" creates a new location which is embedded
 in the given location "C<$location>" at the current position (defined
 by what has been printed to the embedding location till this moment).
 
-Such a nested location usually does not need a filename associated with
-it (because it will be dumped to the same file as the location in which
-it is embedded anyway), unless you want to additionally dump this location
-to a file of its own.
+Such nested locations usually do not need a filename associated with
+them (because they will be dumped to the same file as the location in
+which they are embedded), unless you want to dump this location to a
+file of its own, additionally.
 
-In the latter case use the variant of the "C<new()>" method shown
-immediately below, or the method "C<filename()>" (see below) to set
+In the latter case, use the variant of the "C<new()>" method shown
+immediately below or the method "C<filename()>" (see below) to set
 this filename, or call the method "C<dump()>" (described further
 below) with an appropriate filename argument.
 
@@ -860,62 +781,104 @@ till this moment) and assigns a default filename to it.
 
 See the section on "C<open()>" in L<perlfunc(1)> for details about the
 exact syntax of Perl filenames (this includes opening pipes to other
-programs as a very interesting and useful application, for instance).
+programs as a very interesting and useful application, for example).
 
 =item *
 
-C<$oldfilename = $location-E<gt>filename($newfilename);>
+C<$location-E<gt>filename($filename);>
 
-If the optional parameter is given, this method stores its argument as
-the default filename along with the given location.
+This object method stores a filename along with the given location
+which will be used as the default filename when dumping that location.
 
-This filename also serves as an auto-dump flag. If it is set to a non-empty
-string, auto-dumping (i.e., an automatic call of the "C<dump()>" method)
-occurs when your last reference of the location in question goes out of
-scope, or at shutdown time of your script (whichever comes first). See also
-the description of the "C<dump()>" method further below for more details.
+You may set the filename associated with any given location using this
+method any number of times.
 
-When a location is auto-dumped, its associated filename is used as the
-filename of the file into which the location's contents are dumped.
+Note that you can use this very same method "C<filename()>" in order to
+retrieve the default filename that has been stored along with a given
+location if you call it WITHOUT any parameters (see also immediately
+below).
 
-This method returns the filename that was associated with the given
-location before this method call (i.e., the filename given to the
-"C<new()>" method or to a previous call of this method), or the
-empty string if there was no filename associated with the given
-location.
+=item *
+
+C<$filename = $location-E<gt>filename();>
+
+When called without parameters, this object method returns the default
+filename that has previously been stored along with the given location,
+using either the method "C<new()>" or this very same method, "C<filename()>"
+(but with a filename passed to it as its (only) argument).
 
 =item *
 
 C<$flag = $location-E<gt>toplevel();>
 
-Use this method to check wether the given location is a "top-level"
-location, i.e., if the given location is NOT embedded in any other location.
+Use this method to find out if any given location is a "top-level" location
+or not, i.e., if the given location is embedded in any other location or not.
 
 Note that locations created by the CLASS METHOD "C<new()>" all start their
 life-cycle as top-level locations, whereas locations which are embedded in
-some other location by using the OBJECT METHOD "C<new()>" (or the method
-"C<print()>"; see further below for details) are NOT, by definition,
+some other location by using the OBJECT METHOD "C<new()>" or the method
+"C<print()>" (see further below for details) are NOT, by definition,
 top-level locations.
 
 Whenever a top-level location is embedded in another location (using the
 method "C<print()>" - see further below for more details), it automatically
 loses its "top-level" status.
 
-When you throw away the contents of a location (using the method
-"C<delete()>" - see further below for details), however, the locations
-that may have been embedded in the deleted location can become "orphans"
-which have no "parents" anymore, i.e., they may not be embedded in any
-other location anymore. These "orphan" locations will automatically
-become "top-level" locations.
+On the other hand side, when you throw away the contents of a location
+(using the method "C<delete()>" - see further below for details), the
+other locations that may have been embedded in the deleted location may
+become "orphans" which have no "parents" anymore, i.e., which are not
+embedded in any other location anymore. These "orphan" locations will
+automatically become "top-level" locations.
 
 The method returns "true" ("C<1>") if the given location is a top-level
-location, and "false" ("C<0>") otherwise.
+location, and "false" ("C<0>") otherwise, provided that the method is
+called without parameters.
+
+=item *
+
+C<$location-E<gt>toplevel($flag);>
+
+You can also use the method "C<toplevel()>" to clear or set the "toplevel"
+attribute of any given location.
+
+The "toplevel" attribute of each location determines wether it is eligible
+for processing by the CLASS METHODS "C<dump()>" and "C<traverse()>" (see
+further below for details) or not.
+
+Usually, the "toplevel" attribute is set and cleared automatically by this
+module as needed.
+
+Therefore, you shouldn't need to use this method to change the "toplevel"
+attribute of a location under any normal circumstances.
+
+There is one conceivable exception, though, if you want to do some "reuse"
+of the contents of a top-level location by embedding it in some other
+location.
+
+You might for example want to store a C header file in a top-level location
+and to include it in some C source file at the same time (i.e., you might
+need to write the resulting C headers to a file of their own and still want
+to write this very same information to a different file as part of the
+information of that file, without duplicating this information in memory).
+
+Because a top-level location automatically loses its "top-level" status
+whenever it is embedded in another location, you will have to set the
+"toplevel" attribute of the location in question again AFTER embedding
+it (see the description of the method "C<print()>" immediately below
+for details about how to do that) using this method.
+
+The method expects one parameter, which should either be "C<0>" (for
+clearing the "toplevel" attribute) or "C<1>" (in order to set the
+"toplevel" attribute).
+
+Use this method with precaution!
 
 =item *
 
 C<$location-E<gt>print(@items);>
 
-This method prints the given list of arguments to the indicated
+This object method prints the given arguments to the indicated
 location, i.e., appends the given items to the given location.
 
 IMPORTANT FEATURE:
@@ -931,37 +894,39 @@ This embeds location "C<$sublocation>" in location "C<$location>" at
 the current position (defined by what has been printed to location
 "C<$location>" till this moment).
 
-(Note that the name "C<$sublocation>" above only refers to the fact
+(Note that the name "C<$sublocation>" above refers only to the fact
 that this location is going to be embedded in the location "C<$location>".
 "C<$sublocation>" may actually be ANY location you like, even a top-level
-location. Note though that a top-level location will automatically lose
-its "top-level" status by doing so.)
+location. Beware though that a top-level location will automatically lose
+its "top-level" status by doing so. If this is not what you want, you can
+always use the method "C<toplevel()>" (for a description, see further above)
+to set its "toplevel" attribute again, AFTER embedding it.)
 
 This is especially useful if you are generating data once in your
-program which you need to include at several places in your output.
+program which you need at several places in your output.
 
 This saves a lot of memory because only a reference of the embedded
 location is stored in every embedding location, instead of all the
-data, which is stored in memory only once.
+data, which is stored in memory only once!
 
 Note that other references than "Data::Locations" object references are
 illegal, trying to "print" such a reference to a location will result
 in a warning message (if the "C<-w>" switch is set) and the reference
-in question will simply be ignored.
+will simply be ignored.
 
-Note also that potential infinite recursions (which would occur when a
-given location contained itself, directly or indirectly) are detected
-automatically and refused (with an appropriate error message and
-program abortion).
+Note also that potential infinite recursions (which would occur when
+a given location contained itself, directly or indirectly!) are
+detected automatically and refused (with an appropriate error message
+and program abortion).
 
-Because of the necessity for this check, it is more efficient to embed
-locations using the object method "C<new()>", where possible, rather
+Because of the necessity for this check, it is more efficient to
+embed locations using the object method "C<new()>" (where possible)
 than with this mechanism, because embedding an empty new location
-(as with "C<new()>") is always possible without checking.
+is always possible without checking.
 
-Remember that in order to minimize the number of "C<print()>" method calls
-in your program (remember that lazyness is a programmer's virtue! C<;-)>)
-you can always use the "here-document" syntax:
+REMEMBER that in order to minimize the number of "C<print()>" method calls
+in your program (remember that lazyness is a programmer's virtue!) you
+can always use the "here-document" syntax:
 
   $location->print(<<"VERBATIM");
   Article: $article
@@ -972,14 +937,23 @@ you can always use the "here-document" syntax:
 Remember also that the type of quotes (single/double) around the
 terminating string ("VERBATIM" in this example) determines wether
 variables inside the given text will be interpolated or not!
-(See L<perldata(1)> for more details.)
+
+See L<perldata(1)> for more details!
 
 =item *
 
 C<print $location @items;>
 
-Note that you can also use Perl's built-in operator "C<print>" to
-print data to a given location.
+Note that you can also use Perl's built-in operator "C<print>" for
+printing to a file handle to actually print data to the given location
+instead.
+
+Note though that opening a location with "C<open()>" should be avoided:
+The corresponding file or pipe will actually be created, but data will
+nevertheless be sent to and read from the given location instead.
+
+Likewise, closing a location with "C<close()>" has no effect other
+than closing the corresponding (dummy) file or pipe.
 
 =item *
 
@@ -988,25 +962,33 @@ C<$location-E<gt>printf($format, @items);>
 This method is an analogue of the Perl (and C library) function
 "C<printf()>".
 
-See the section on "C<printf()>" in L<perlfunc(1)> and L<printf(3)>
-(or L<sprintf(3)>) on your system for a description.
+See the section on "C<printf()>" in L<perlfunc(1)> and L<printf(3)> or
+L<sprintf(3)> on your system for an explanation of its use.
 
 =item *
 
 C<printf $location $format, @items;>
 
-Note that you can also use Perl's built-in operator "C<printf>" to
-print data to a given location.
+Note that you can also use Perl's built-in operator "C<printf>" for
+printing to a file handle to actually print data to the given location
+instead.
+
+Note though that opening a location with "C<open()>" should be avoided:
+The corresponding file or pipe will actually be created, but data will
+nevertheless be sent to and read from the given location instead.
+
+Likewise, closing a location with "C<close()>" has no effect other
+than closing the corresponding (dummy) file or pipe.
 
 =item *
 
 C<$location-E<gt>println(@items);>
 
 This is (in principle) the same method as the "C<print()>" method described
-further above, except that it always appends a "newline" character ("C<\n>")
-to the list of items being printed to the given location.
+further above, except that it appends a "newline" character ("C<\n>") to the
+list of items being printed to the given location.
 
-Note that this newline character is NOT appended to (i.e., concatenated with)
+Note that this newline character is NOT appended (i.e., concatenated) to
 the last item of the given list of items, but that it is rather stored as
 an item of its own.
 
@@ -1023,43 +1005,33 @@ appended).
 
 C<$item = $location-E<gt>read();>
 
-In "scalar" context, the method "C<read()>" returns the next item of
-data from the given location.
-
-If that item happens to have the value "C<undef>", this method returns
-the empty string instead.
+In "scalar" context, the object method "C<read()>" returns the next item
+of data from the given location.
 
 If you have never read from this particular location before, "C<read()>"
-will automatically start reading at the beginning of the given location.
+will automatically start at the beginning.
 
 Otherwise each call of "C<read()>" will return successive items from
 the given location, thereby traversing the given location recursively
-through all embedded locations (which it may or may not contain), thus
-returning the contents of the given location (and any locations embedded
-therein) in a "flattened" way.
+through all embedded locations which it may or may not contain.
 
 To start reading at the beginning of the given location again, invoke
-the method "C<reset()>" (see a little further below for its description)
+the method "C<reset()>" (see a little further below for a description)
 on that location.
 
 The method returns "C<undef>" when there is no more data to read.
 
 Calling "C<read()>" again thereafter will simply continue to return
 "C<undef>", even if you print some more data to the given location
-in the meantime.
+in the meantime (!).
 
-However, if you have read the last item from the given location,
-but you haven't got the "C<undef>" return value yet, it is possible
-to print more data to the location in question and to subsequently
-continue to read this new data.
-
-Remember to use "C<reset()>" if you want to read data from the beginning
-of the given location again.
+Remember to use "C<reset()>" if you want to read data from this particular
+location again!
 
 Finally, note that you can read from two (or any number of) different
 locations at the same time, even if any of them is embedded (directly
 or indirectly) in any other of the locations you are currently reading
-from, without any interference.
+from, without any interference!
 
 This is because the state information associated with each "C<read()>"
 operation is stored along with the (given) location for which the
@@ -1070,73 +1042,79 @@ operation is stored along with the (given) location for which the
 
 C<$item = E<lt>$locationE<gt>;>
 
-Note that you can also use Perl's diamond operator syntax ("C<E<lt>E<gt>>")
-in order to read data from the given location.
+Note that you can also use Perl's built-in diamond operator "C<E<lt>E<gt>>"
+for reading from a file handle to actually read data from the given location
+instead.
 
-BEWARE that unlike reading from a file, reading from a location in this
-manner will return the items that have been stored in the given location
-in EXACTLY the same way as they have been written previously to that
-location, i.e., the data is NOT read back line by line, with "C<\n>"
-as the line separator, but item by item, whatever these items are!
+BEWARE that unlike reading from a file, reading from a location in
+this manner will return the items that have been stored in the given
+location in EXACTLY the same way as they have been written to that
+location previously, i.e., the data is NOT read back line by line,
+with "C<\n>" as the line separator, but item by item, whatever the
+items are!
 
 (Note that you can also store binary data in locations, which will likewise
-be read back in exactly the same way as it has been stored previously.)
+be read back in exactly the same way as it has been stored previously!)
 
 =item *
 
 C<@list = $location-E<gt>read();>
 
-In "array" or "list" context, the method "C<read()>" returns the
-rest of the contents of the given location, starting where the last
-"C<read()>" left off, or from the beginning of the given location
-if you never read from this particular location before or if you
-called the method "C<reset()>" (see a little further below for
-its description) for this location just before calling "C<read()>".
+In "array" or "list" context, the object method "C<read()>" returns the
+rest of the contents of the given location, starting from where the
+last "C<read()>" left off, or from the beginning of the given location
+if you never read from this particular location before or if you called
+the method "C<reset()>" (see a little further below for a description)
+for this location just before calling "C<read()>".
 
 The method returns a single (possibly very long!) list containing
 all the items of data the given location and all of its embedded
 locations (if any) contain - in other words, the data contained
-in all these nested locations is returned in a "flattened" way
-(in "infix" order, for the mathematically inclined).
-
-If any of the items in the list happens to have the value "C<undef>",
-it is replaced by an empty string.
+in all these nested locations is returned in a "flattened" way.
 
 The method returns an empty list if the given location is empty
-or if a previous "C<read()>" read past the end of the data in
-the given location.
+or if the last "C<read()>" read past the end of the data in the
+given location.
 
 Remember to use "C<reset()>" whenever you want to be sure to read
 the contents of the given location from the very beginning!
 
 For an explanation of "scalar" versus "array" or "list" context,
-see the section on "Context" in L<perldata(1)>.
+see the section on "Context" in L<perldata(1)>!
 
 =item *
 
 C<@list = E<lt>$locationE<gt>;>
 
-Note that you can also use Perl's diamond operator syntax ("C<E<lt>E<gt>>")
-in order to read data from the given location.
+Note that you can also use Perl's built-in diamond operator "C<E<lt>E<gt>>"
+for reading from a file handle to actually read data from the given location
+instead.
 
 BEWARE that unlike reading from a file, reading from a location in
-this manner will return the list of items that have been stored in
-the given location in EXACTLY the same way as they have been written
-previously to that location, i.e., the data is NOT read back as a
+this manner will return the list of items that has been stored in
+the given location in EXACTLY the same way as it has been written
+to that location previously, i.e., the data is NOT read back as a
 list of lines, with "C<\n>" as the line separator, but as a list
 of items, whatever these items are!
 
-(Note that you can also store binary data in locations, which will
-likewise be read back in exactly the same way as it has been stored
-previously.)
+(Note that you can also store binary data in locations, which will likewise
+be read back in exactly the same way as it has been stored previously!)
+
+=item *
+
+C<Data::Locations-E<gt>reset();>
+
+The CLASS METHOD "C<reset()>" calls the OBJECT METHOD "C<reset()>"
+(see immediately below) for EVERY location that exists - NOT just
+for the top-level locations.
 
 =item *
 
 C<$location-E<gt>reset();>
 
-The method "C<reset()>" deletes the state information associated with
-the given location which is used by the "C<read()>" method in order
-to determine the next item of data to be returned.
+The OBJECT METHOD "C<reset()>" deletes the state information associated
+with the given location which is used by the "C<read()>" method in order
+to determine the next item of data to return.
 
 After using "C<reset()>" on a given location, any subsequent "C<read()>" on
 the same location will start reading at the beginning of that location.
@@ -1145,167 +1123,249 @@ This method has no other (side) effects whatsoever.
 
 The method does nothing if there is no state information associated
 with the given location, i.e., if the location has never been accessed
-before using the "C<read()>" method or if "C<reset()>" has already been
-called previously.
+using the "C<read()>" method or if "C<reset()>" has already been called
+for it before.
+
+=item *
+
+C<Data::Locations-E<gt>traverse(\&callback_function);>
+
+The CLASS METHOD "C<traverse()>" cycles through all top-level locations
+(IN NO PARTICULAR ORDER!) and calls the callback function you specified
+once for each of them.
+
+Expect one parameter handed over to your callback function which is
+the object reference to the location in question.
+
+Since callback functions can do a lot of unwanted things, use this
+method with precaution!
 
 =item *
 
 C<$location-E<gt>traverse(\&callback_function);>
 
-The method "C<traverse()>" performs a recursive descent on the given
-location just as the methods "C<read()>" and "C<dump()>" do internally,
-but instead of immediately returning the items of data contained in the
-location or printing them to a file, this method calls the callback
-function you specify as a parameter once for each item stored in the
-location.
+The OBJECT METHOD "C<traverse()>" performs a recursive descent on
+the given location just as the method "C<dump()>" does internally,
+but instead of printing the items of data contained in the location
+to a file, this method calls the callback function you specified
+once for each item stored in the location.
 
 Expect one parameter handed over to your callback function which
-consists of the next item of data contained in the given location
-(or the locations embedded therein).
+is the next chunk of data contained in the given location (or the
+locations embedded therein).
 
-Note that unlike the "C<read()>" method, items returned by this method
-which happen to have the value "C<undef>" are NOT replaced by the empty
-string, i.e., the parameter your callback function receives might be
-undefined. You should therefore take appropriate measures in your
-callback function to handle this special case.
+Since callback functions can do a lot of unwanted things, use this
+method with precaution!
 
-Moreover, since callback functions can do a lot of unwanted things,
-use this method with precaution!
+Please refer to the example given at the bottom of this document for
+more details about how to use these two variants of the "C<traverse()>"
+method!
 
-Please refer to the "examples" section at the bottom of this document
-for an example of how to use this method.
-
-Using the method "C<traverse()>" is actually an alternate way of
+Using the object method "C<traverse()>" is actually an alternate way of
 reading back the contents of a given location (besides using the method
 "C<read()>") completely in memory (i.e., without writing the contents of
 the given location to a file and reading that file back in).
 
 Note that the method "C<traverse()>" is completely independent from the
-method "C<read()>" and from the state information associated with the
-"C<read()>" method (the one which can be reset to point to the beginning
-of the location using the method "C<reset()>").
+method "C<read()>" and that it has nothing to do with the state information
+associated with the "C<read()>" method (which can be reset to point to the
+beginning of the location using the method "C<reset()>").
 
 This means that you can "C<traverse()>" and "C<read()>" (and "C<reset()>")
 the same location at the same time without any interference.
 
 =item *
 
+C<$ok = Data::Locations-E<gt>dump();>
+
+This CLASS METHOD dumps all top-level locations to their default
+files (whose filenames must have been stored previously along with
+each location using the method "C<new()>" or "C<filename()>").
+
+Note that a warning message will be printed (if the "C<-w>" switch is set)
+if any of the top-level locations happens to lack a default filename and
+that the respective location will simply not be dumped to a file!
+
+Did I mention that you should definitely consider using the "C<-w>" switch?
+
+(Program execution continues in order to facilitate debugging of
+your program and to save a maximum of your data in memory which
+would be lost otherwise!)
+
+Moreover, should any problem arise with any of the top-level locations
+(for instance no filename given or filename invalid or unable to open
+the specified file), then this method returns "false" ("C<0>").
+
+The method returns "true" ("C<1>") only if ALL top-level locations
+have been written to their respective files successfully.
+
+Note also that a ">" is prepended to this default filename just
+before opening the file if the default filename does not begin
+with ">", "|" or "+" (leading white space is ignored).
+
+This does not change the filename which is stored along with the
+location, however.
+
+Finally, note that this method does not affect the contents of
+the locations that are being dumped.
+
+If you want to delete all your locations once they have been dumped
+to their respective files, call the class method "C<delete()>"
+(explained further below) EXPLICITLY.
+
+=item *
+
 C<$ok = $location-E<gt>dump();>
 
-The method "C<dump()>" (without parameters) dumps the contents of the
-given location to its associated default file (whose filename must have
-been stored along with the given location previously using the method
-"C<new()>" or "C<filename()>").
+The OBJECT METHOD "C<dump()>" dumps the given location to its default
+file (whose filename must have been stored previously along with
+this location using the method "C<new()>" or "C<filename()>").
 
 Note that a warning message will be printed (if the "C<-w>" switch is set)
 if the location happens to lack a default filename and that the location
-will simply not be dumped to a file in that case. Moreover, the method
-returns "false" ("C<0>") to indicate the failure.
+will simply not be dumped to a file!
 
-Should any other problem arise while attempting to dump the given location
-(for instance an invalid filename or an error while trying to open or close
-the specified file), a corresponding warning message will be printed to the
-screen (provided that the "C<-w>" switch is set) and the method will also
-return "false" ("C<0>").
+(Program execution continues in order to facilitate debugging of
+your program and to save a maximum of your data in memory which
+would be lost otherwise!)
 
-The method returns "true" ("C<1>") if and only if the given location has
-been successfully written to its respective file.
+Moreover, should any problem arise with the given location (for
+instance no filename given or filename invalid or unable to open
+the specified file), then this method returns "false" ("C<0>").
 
-Note that a ">" is prepended to the default filename just before opening
-the file if the default filename does not begin with ">", "|" or "+"
-(leading white space is ignored).
+The method returns "true" ("C<1>") if the given location has been
+successfully written to its respective file.
 
-This does NOT change the filename which is stored along with the given
+Note also that a ">" is prepended to this default filename just
+before opening the file if the default filename does not begin
+with ">", "|" or "+" (leading white space is ignored).
+
+This does not change the filename which is stored along with the
 location, however.
 
-Finally, note that this method does not affect the contents of the
-location being dumped.
+Finally, note that this method does not affect the contents of
+the location being dumped.
 
-If you want to delete the contents of the given location once they have
-been dumped, call the method "C<delete()>" (explained further below)
-thereafter.
-
-If you want to dump and immediately afterwards destroy a location, you
-don't need to call the method "C<dump()>" explicitly. It suffices to
-store a filename along with the location in question using the method
-"C<new()>" or "C<filename()>" and then to make sure that all references
-to this location are destroyed (this happens for instance whenever the
-last "my" variable containing a reference to the location in question
-goes out of scope - provided there are no global variables containing
-references to the location in question).
-
-This will automatically cause the location to be dumped (by calling the
-"C<dump()>" method internally) and then to be destroyed. (This feature
-is called "auto-dump".)
-
-Auto-dumping also occurs at shutdown time of your Perl script or program:
-All locations that have a non-empty filename associated with them will
-automatically be dumped (by calling the "C<dump()>" method internally)
-before the global garbage collection (i.e., the destruction of all data
-variables) takes place.
-
-In order to prevent auto-dumping, just make sure that there is no filename
-associated with the location in question at the time when its last reference
-goes out of scope or at shutdown time.
-
-You can ensure this by calling the "C<filename()>" method with an empty
-string (C<"">) as argument.
+If you want to delete this location once it has been dumped, call
+the object method "C<delete()>" (explained further below) EXPLICITLY.
 
 =item *
 
 C<$ok = $location-E<gt>dump($filename);>
 
-The method "C<dump()>" (with a filename argument) in principle does exactly
-the same as the variant without arguments described immediately above, except
-that it temporarily overrides the default filename associated with the given
-location and that it uses the given filename instead.
+This variant of the OBJECT METHOD "C<dump()>" does the same as the
+variant described immediately above, except that it overrides the
+default filename stored along with the given location and uses the
+indicated filename instead.
 
-Note that the location's associated filename is just being temporarily
-overridden, BUT NOT CHANGED.
+Note that the stored filename is just being overridden, BUT NOT
+CHANGED.
 
-I.e., if you call the method "C<dump()>" again later without a filename
-argument, the filename stored along with the given location will be used,
-and not the filename specified here.
+I.e., if you call the method "C<dump()>" again without a filename argument
+after calling it with an explicit filename argument once, the initial
+filename stored with the given location will be used, NOT the filename
+that you specified explicitly the last time when you called "C<dump()>"!
 
-Should any problem arise while attempting to dump the given location
-(for instance if the given filename is invalid or empty or if Perl is
-unable to open or close the specified file), a corresponding warning
-message will be printed to the screen (provided that the "C<-w>" switch
-is set) and the method returns "false" ("C<0>").
+Should any problem arise with the given location (for instance if the
+given filename is invalid or empty or if Perl was unable to open the
+specified file), then this method returns "false" ("C<0>").
 
-The method returns "true" ("C<1>") if and only if the given location
-has been successfully written to the specified file.
+The method returns "true" ("C<1>") if the given location has been
+successfully written to the specified file.
 
 (Note that if the given filename is empty or contains only white space,
 the method does NOT fall back to the filename previously stored along
-with the given location, because doing so could overwrite valuable data.)
+with the given location, because doing so could overwrite valuable data!)
 
 Note also that a ">" is prepended to the given filename if it does not
 begin with ">", "|" or "+" (leading white space is ignored).
 
-Finally, note that this method does not affect the contents of the
-location being dumped.
+Finally, note that this method does not affect the contents of
+the location being dumped.
 
-If you want to delete the given location once it has been dumped, you
-need to call the method "C<delete()>" (explained below) explicitly.
+If you want to delete this location once it has been dumped, call
+the object method "C<delete()>" (explained below) EXPLICITLY.
+
+=item *
+
+C<Data::Locations-E<gt>delete();>
+
+The CLASS METHOD "C<delete()>" deletes ALL locations and their contents
+(NOT just all the top-level locations), which allows you to start over
+completely from scratch.
+
+Note that you do not need to call this method in order to initialize
+this class before using it; the "C<use Data::Locations;>" statement
+is sufficient.
+
+BEWARE that any references to locations you might still be holding
+in your program become invalid by invoking this method!
+
+If you try to invoke a method using such an invalidated reference,
+an error message (with program abortion) similar to this one will
+occur:
+
+  Can't locate object method "method" via package
+  "[Error: stale reference!]" at program.pl line 65.
+
+Note also that unlike other (typical) Perl objects (or "classes"),
+locations are NOT automatically removed from memory (i.e.,
+"garbage-collected") when your last reference pointing to any given
+location is assigned a new value or if it goes out of scope (i.e.,
+when the surrounding block ends to which your reference of a location
+is local), even if this location is not embedded in any other location.
+
+The reason for this is that you still might be interested in the location's
+contents (which might be embedded in other locations and hence might still
+be needed) even if you don't care about the reference to access it anymore.
+
+This means that you can safely throw away the reference you got back
+from the "C<Data::Locations>" constructor method ("C<new()>") as soon
+as you don't need to directly access this location anymore.
+
+It will nevertheless be dumped to a file when you call
+"C<Data::Locations-E<gt>dump();>" thereafter IF it is either a top-level
+location itself or if it is (directly or indirectly) embedded in a top-level
+location.
+
+If you want to "destroy" a single location (i.e., if you want to get
+rid of its contents), call the OBJECT METHOD "C<delete()>" (described
+immediately below) instead!
 
 =item *
 
 C<$location-E<gt>delete();>
 
-The method "C<delete()>" deletes the CONTENTS of the given location -
+The OBJECT METHOD "C<delete()>" deletes the CONTENTS of the given location -
 the location CONTINUES TO EXIST and REMAINS EMBEDDED where it was!
 
-The associated filename stored along with the given location is also
-NOT AFFECTED by this method.
+The associated filename as well as the "toplevel" attribute stored along
+with the given location are also NOT AFFECTED by this.
 
-BEWARE that any locations which were previously embedded in the given
-location might go out of scope by invoking this method!
+Note that a complete removal of the given location itself from memory
+INCLUDING all references to this location (which may still be embedded
+somewhere in other locations) is unnecessary if subsequently you do not
+print anything to this location anymore!
 
-Note that in order to actually DESTROY a location altogether it suffices
-to simply let the last reference to the location in question go out of
-scope, or to set the variable containing the last reference to a new
-value (e.g. C<$ref = 0;>).
+If the given location is a top-level location, you might want to set the
+associated filename to "/dev/null", though, using the method "C<filename()>"
+(before or after deleting the location, this makes no difference), or to
+clear its "top-level" status by using the method "C<toplevel()>" (for a
+description of these methods, see further above).
+
+BEWARE that the locations that were previously embedded in the given
+(now deleted) location may not be contained in any other location anymore
+after invoking this method!
+
+If this happens, the affected "orphan" locations will automatically be
+promoted to "top-level" locations.
+
+Note however that you may have to define a default filename for these
+orphaned locations (if you haven't done so previously) before invoking
+"C<Data::Locations-E<gt>dump();>" in order to avoid data loss and the
+warning message that will occur otherwise!
+
+(The warning message will appear only if the "C<-w>" switch is set, though.)
 
 =item *
 
@@ -1329,38 +1389,33 @@ C<$location-E<gt>tie(\*{FILEHANDLE});>
 
 Although locations behave like file handles themselves, i.e., even though
 they allow you to use Perl's built-in operators "C<print>", "C<printf>"
-and the diamond operator "C<E<lt>E<gt>>" in order to write data to and
-read data from them, it is sometimes desirable to be able to redirect
-the output which is sent to other file handles (such as STDOUT and
-STDERR, for example) to some location instead (rather than the
-screen, for instance).
+and the diamond operator "C<E<lt>E<gt>>" for writing data to and reading
+data from them, it is sometimes desirable to be able to redirect the
+input/output from/to other file handles in a program to locations.
 
-It may also be useful to be able to read data from a location via some
-other file handle (such as STDIN, for example, which allows you to
-"remote-control" a program which reads commands from standard input
-by redirecting STDIN and then spoon-feeding the program as desired).
+As an example, it might be desirable to "catch" the output that is being
+sent to STDOUT and STDERR by some program in two separate locations.
 
-(Note that on the Windows NT/95 platform, tying is probably the only
-way of redirecting output sent to STDERR, since the command shell
-won't allow you to do so!)
+(On Windows NT/95 platforms, this is probably the only way to redirect
+the system's standard error device!)
 
-The method "C<tie()>" (be careful not to confuse the METHOD "C<tie()>" and
-the Perl built-in OPERATOR "C<tie>"!) provides an easy way for doing this.
+The method "C<tie()>" (be careful not to confuse the METHOD "C<tie()>"
+and the Perl OPERATOR "C<tie>"!) provides the means for doing so.
 
 Simply invoke the method "C<tie()>" for the location which should be
 "tied" to a file handle, and provide either the name, a typeglob or a
-typeglob reference of the file handle in question as the (only)
-parameter to this method.
+typeglob reference of the file handle in question as the (unique)
+parameter to this method call.
 
 After that, printing data to this file handle will actually send this
-data to its associated ("tied") location, and reading from this file
-handle will actually read the data from the tied location instead.
+data to its "tied" location, and reading from this file handle will
+actually read the data from the tied location instead.
 
-Note that you don't need to explicitly "C<open()>" or "C<close()>" such
-a tied file handle in order to be able to access its associated location
-(regardless wether you want to read from or write to the location or both),
-even if this file handle has never been explicitly (or implicitly) opened
-(or even used) before.
+Note that you don't need to explicitly "C<open>" or "C<close>" this
+tied file handle (in fact you should NEVER try to do so!), even if
+this file handle has never been explicitly opened before, and that
+you can read from AND write to the associated location without any
+further ado.
 
 The physical file or terminal the tied file handle may have been
 connected to previously is simply put on hold, i.e., it is NOT written
@@ -1368,38 +1423,25 @@ to or read from anymore, until you "C<untie>" the connection between
 the file handle and the location (see further below for more details
 about "C<untie>").
 
-Note also that if you do not "C<untie>" the file handle before your program
-ends, Perl will try to close it for you, which under Perl 5.005 will lead
-to a warning message (provided that the "C<-w>" switch is set) saying that
-the attempted "C<close()>" operation was ignored. This is because under Perl
-5.005, a "C<close()>" on a tied file handle is forwarded to the associated
-(i.e., tied) object instead.
-
-Under Perl 5.004, the behaviour of "C<close()>" is different: When used on
-a location it is simply ignored (without any warning message), and a close
-on a tied file handle will close the underlying file or pipe (if there is
-one).
-
-Finally, note that you don't need to qualify the built-in file handles
-STDIN, STDOUT and STDERR, which are enforced by Perl to be in package
-"main", and file handles belonging to your own package, but that it
-causes no harm if you do (provided that you supply the correct
-package name).
+Note that you don't need to qualify the predefined file handles STDIN,
+STDOUT and STDERR, which are enforced by Perl to be in package "main",
+and file handles belonging to your own package, but that it causes no
+harm if you do (provided that you supply the correct package name).
 
 The only file handles you need to qualify are custom file handles belonging
-to packages other than the one in which the method "C<tie()>" is called.
+to packages other than the one from which the method "C<tie()>" is called.
 
-Some examples:
+Examples:
 
           $location->tie('STDOUT');
           $location->tie('MYFILE');
-          $location->tie('My::Class::FILE');
+          $location->tie('Other::Class::FILE');
           $location->tie(*STDERR);
           $location->tie(\*main::TEMP);
 
 Please also refer to the example given at the bottom of this document
 for more details about tying file handles to locations (especially
-for STDERR).
+concerning STDERR).
 
 See L<perlfunc(1)> and L<perltie(1)> for more details about "tying"
 in general.
@@ -1425,11 +1467,10 @@ C<tie(*FILEHANDLE, "Data::Locations", $location);>
 
 =item *
 
-C<tie(*{$filehandle}, "Data::Locations", $location);>
+C<tie($filehandle, "Data::Locations", $location);>
 
 Finally, note that you are not forced to use the METHOD "C<tie()>", and
-that you can of course also use the OPERATOR "C<tie>" directly, as shown
-in the two examples above.
+that you can also use the OPERATOR "C<tie>" directly, as shown above!
 
 =item *
 
@@ -1437,19 +1478,17 @@ C<$location = tied *FILEHANDLE;>
 
 =item *
 
-C<$location = tied *{$filehandle};>
+C<$location = tied $filehandle;>
 
 The Perl operator "C<tied>" can be used to get back a reference to the
 object the given file handle is "tied" to.
 
 This can be used to invoke methods for this object, as follows:
 
-          (tied   *FILEHANDLE)->method();
-          (tied *{$filehandle})->method();
+          (tied *FILEHANDLE)->method();
+          (tied $filehandle)->method();
 
-Note that "C<tied *{$location}>" is identical with "C<$location>" itself.
-
-See L<perlfunc(1)> and L<perltie(1)> for more details.
+See L<perlfunc(1)> for details.
 
 =item *
 
@@ -1457,27 +1496,33 @@ C<untie *FILEHANDLE;>
 
 =item *
 
-C<untie *{$filehandle};>
+C<untie $filehandle;>
 
-The Perl operator "C<untie>" is used to "cut" the magic connection
-between a file handle and its associated object.
+The Perl operator "C<untie>" is used to cut the "magic" connection between
+a file handle and its associated object.
 
 Note that a warning message such as
 
-  untie attempted while 1 inner references still exist
+  untie attempted while 7 inner references still exist
 
-will be issued (provided the "C<-w>" switch is set) whenever you try
-to "C<untie>" a file handle from a location.
+will be issued if the "C<-w>" switch is set and if more than one reference
+to the tied object (i.e., in addition to the one possessed by the tied file
+handle in question) exists.
 
-To get rid of this warning message, use the following approach:
+With locations, this will be the rule, because locations are linked together
+internally in many ways (in order to implement the embedding of locations).
+
+To get rid of this warning message at this particular point in your program
+while retaining the "C<-w>" switch activated in general, use the following
+approach:
 
   {
       local($^W) = 0;     ##  Temporarily disable the "-w" switch
       untie *FILEHANDLE;
   }
 
-(Note the surrounding braces which limit the effect of disabling the
-"C<-w>" switch.)
+(Note the surrounding braces which limit the effect of disabling the "C<-w>"
+switch.)
 
 See L<perlfunc(1)> and L<perltie(1)> for more details.
 
@@ -1496,13 +1541,12 @@ C<$oldfilehandle = select($newlocation);>
 Remember that you can define the default output file handle using Perl's
 built-in function "C<select()>".
 
-"C<print>" and "C<printf>" statements without explicit file handle (note
-that "C<println>" ALWAYS needs an explicit location where to send its
-output to!) always send their output to the currently selected default
-file handle (which is usually "STDOUT").
+"C<print>" (and "C<printf>") statements without explicit file handle always
+send their output to the currently selected default file handle, which is
+usually "STDOUT".
 
-"C<select()>" always returns the current default file handle and allows
-you to define a new default file handle at the same time.
+"C<select()>" always returns the current default file handle and allows you
+to define a new default file handle at the same time.
 
 By selecting a location as the default file handle, all subsequent "C<print>"
 and "C<printf>" statements (without explicit file handle) will send their
@@ -1511,13 +1555,86 @@ output to that location:
   select($location);
   print "Hello, World!\n";  ##  prints to "$location"
 
-See the section on "C<select()>" in L<perlfunc(1)> for more details.
+See the section on "C<select()>" in L<perlfunc(1)> for more details!
 
 =back
 
+=head1 WARNING
+
+"C<Data::Locations>" are rather delicate objects; they are valid Perl
+file handles B<AS WELL AS> valid Perl objects B<AT THE SAME TIME>.
+
+As a consequence, B<YOU CANNOT INHERIT> from the "C<Data::Locations>"
+class, i.e., it is B<NOT> possible to create a derived class or subclass
+from the "C<Data::Locations>" class!
+
+Trying to do so will cause many severe malfunctions, most of which
+will not be apparent immediately.
+
+Chances are also great that by adding new attributes to a
+"C<Data::Locations>" object you will clobber its (quite tricky)
+underlying data structure.
+
+Therefore, use embedding and delegation instead, rather than
+inheritance, as shown below:
+
+  package My::Class;
+  use Data::Locations;
+  sub new
+  {
+      my $self = shift;
+      my ($location, $object);
+      if (ref($self)) { $location = $self->{'location'}->new(); }
+      else            { $location =     Data::Locations->new(); }
+      $object = { 'location'   => $location,
+                  'attribute1' => $whatever,
+                  'attribute2' => $whatelse };
+      bless($object, ref($self) || $self);
+  }
+  sub AUTOLOAD
+  {
+      my $self = shift;
+      return if $AUTOLOAD =~ /::DESTROY$/;
+      $AUTOLOAD =~ s/^My::Class:://;
+      if (ref($self)) { $self->{'location'}->$AUTOLOAD(@_); }
+      else            {     Data::Locations->$AUTOLOAD(@_); }
+  }
+  1;
+
+Note that using this scheme, all methods available for
+"C<Data::Locations>" objects are also (automatically and
+directly) available for "C<My::Class>" objects, i.e.,
+
+  use My::Class;
+  $obj = My::Class->new();
+  $obj->filename('test.txt');
+  $obj->print("This is ");
+  $sub = $obj->new();
+  $obj->print("information.");
+  @items = $obj->read();
+  print "<", join('|', @items), ">\n";
+  $sub->print("an additional piece of ");
+  $obj->reset();
+  @items = $obj->read();
+  print "<", join('|', @items), ">\n";
+  My::Class->dump();
+
+will work as expected (unless you redefine these methods in
+"C<My::Class>").
+
+Moreover, with this scheme, you are free to add new methods
+and/or attributes as you please.
+
+The class "C<My::Class>" can also be subclassed without any
+restrictions.
+
+However, "C<My::Class>" objects are B<NOT> valid Perl file handles;
+therefore, they cannot be used as such in combination with Perl's
+built-in operators for file access.
+
 =head1 EXAMPLE #1
 
-  #!/sw/bin/perl -w
+  #!/usr/local/bin/perl -w
 
   use Data::Locations;
 
@@ -1576,7 +1693,7 @@ See the section on "C<select()>" in L<perlfunc(1)> for more details.
 
   print "default filename = '", $copyright->filename(), "'\n";
 
-  $copyright->filename("");
+  Data::Locations->dump();
 
   __END__
 
@@ -1615,7 +1732,7 @@ to the screen and create the following two files:
 
 =head1 EXAMPLE #2
 
-  #!/sw/bin/perl -w
+  #!/usr/local/bin/perl -w
 
   use Data::Locations;
 
@@ -1673,6 +1790,8 @@ to the screen and create the following two files:
   $contents->println("<P>");
   $contents->println("module for Perl.");
 
+  Data::Locations->dump();
+
   __END__
 
 When executed, this example will produce
@@ -1700,7 +1819,7 @@ the following file ("example.html"):
 
 =head1 EXAMPLE #3
 
-  #!/sw/bin/perl -w
+  #!/usr/local/bin/perl -w
 
   ##  Note that this example only works as described if the "-w" switch
   ##  is set!
@@ -1813,10 +1932,8 @@ the following file ("example.html"):
 
   while (<STDERR>)  ##  Copy warning messages to the screen:
   {
-      if (/^.*?\bData::Locations::[a-z]+\(\):\s+(.+?)(?=\s+at\s|\n)/)
-      {
-          print "Warning: $1\n";
-      }
+      print if
+      (s/^Data::Locations::.+?\(\):\s+(.+?)\s+at\s+.+$/Warning: $1/m);
   }
 
   while (<STDERR>) { print; }
@@ -1835,16 +1952,18 @@ the following file ("example.html"):
 
   ##  Write output file "level0.txt":
 
+  Data::Locations->dump();
+
   __END__
 
 When running this example, the following text will be printed to the screen
-(provided that you did use the "C<-w>" switch):
+(provided that you did use the "C<-w>" switch!):
 
   Now STDOUT goes to the screen again.
-  Warning: REF reference ignored
+  Warning: reference 'REF' ignored
   Warning: filename missing or empty
   WARNING intercepted:
-  Data::Locations::print(): REF reference ignored at test.pl line 92
+  Data::Locations::print(): reference 'REF' ignored at test.pl line 92
   End Of Warning.
   WARNING intercepted:
   Data::Locations::dump(): filename missing or empty at test.pl line 96
@@ -1857,7 +1976,7 @@ following contents:
   Printing to location 'level1' via STDOUT.
   Printing to location 'level2' via default file handle '$fh'.
   WARNING intercepted:
-  Data::Locations::print(): REF reference ignored at test.pl line 92
+  Data::Locations::print(): reference 'REF' ignored at test.pl line 92
   End Of Warning.
   WARNING intercepted:
   Data::Locations::dump(): filename missing or empty at test.pl line 96
@@ -1868,36 +1987,33 @@ following contents:
 
 =head1 EXAMPLE #4
 
-  #!/sw/bin/perl -w
+The following code fragment is an example of how you can use the callback
+mechanism of this class to collect the contents of all top-level locations
+in a string (which is printed to the screen in this example):
 
-  use Data::Locations;
+  sub concat
+  {
+      $string .= $_[0];
+  }
 
-  use strict;
-  no strict "vars";
+  sub list
+  {
+      $string .= $ruler;
+      $string .= "\"" . $_[0]->filename() . "\":\n";
+      $string .= $ruler;
+      $_[0]->traverse(\&concat);
+      $string .= "\n" unless ($string =~ /\n$/);
+  }
 
-  $loc = Data::Locations->new();
-
-  print $loc "Thi";
-  print $loc "s is an ex";
-  print $loc "treme";
-  print $loc "ly long and ted";
-  print $loc "ious line o";
-  print $loc "f text con";
-  print $loc "taining on";
-  print $loc "ly meaning";
-  print $loc "less gibberish.";
+  $ruler = '=' x 78 . "\n";
 
   $string = '';
 
-  $loc->traverse( sub { $string .= $_[0]; } );
+  Data::Locations->traverse(\&list);
 
-  print "'$string'\n";
+  $string .= $ruler;
 
-  __END__
-
-This example will print:
-
-'This is an extremely long and tedious line of text containing only meaningless gibberish.'
+  print $string;
 
 =head1 SEE ALSO
 
@@ -1907,7 +2023,7 @@ perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 5.2.
+This man page documents "Data::Locations" version 4.4.
 
 =head1 AUTHOR
 
@@ -1919,7 +2035,7 @@ This man page documents "Data::Locations" version 5.2.
   mailto:sb@engelschall.com
   http://www.engelschall.com/u/sb/download/
 
-  (Contact by e-mail preferred)
+B<Please contact me by e-mail whenever possible!>
 
 =head1 COPYRIGHT
 
@@ -1933,7 +2049,7 @@ modify it under the same terms as Perl itself, i.e., under the
 terms of the "Artistic License" or the "GNU General Public License".
 
 Please refer to the files "Artistic.txt" and "GNU_GPL.txt"
-in this distribution for details.
+in this distribution for details!
 
 =head1 DISCLAIMER
 

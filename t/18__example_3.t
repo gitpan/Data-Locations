@@ -27,10 +27,9 @@ print "1..2\n";
 $n = 1;
 
 $self = $0;
-$self =~ s!^.*[^0-9a-zA-Z_\.]!!;
+$self =~ s!^.*/!!;
 
-$temp =
-    $ENV{'TMP'} || $ENV{'TEMP'} || $ENV{'TMPDIR'} || $ENV{'TEMPDIR'} || '/tmp';
+$temp = $ENV{'TMP'} || $ENV{'TEMP'} || '/tmp';
 $temp =~ s!/+$!!;
 
 $file = "$temp/$self.$$";
@@ -145,10 +144,8 @@ VERBATIM
     
     while (<STDERR>)  ##  Copy warning messages to the screen:
     {
-        if (/^.*?\bData::Locations::[a-z]+\(\):\s+(.+?)(?=\s+at\s|\n)/)
-        {
-            print "Warning: $1\n";
-        }
+        print if
+        (s/^Data::Locations::.+?\(\):\s+(.+?)\s+at\s+.+$/Warning: $1/m);
     }
     
     while (<STDERR>) { print; }
@@ -173,23 +170,22 @@ close(FILE);
 ##  Read output file "level0.txt":
 
 $txt = join('', $level0->read());
-$ref = <<'VERBATIM';
-Printing first line to location 'level0' via OPERATOR 'print'\..*
-Printing to location 'level1' via STDOUT\..*
-Printing to location 'level2' via default file handle '\$fh'\..*
-WARNING intercepted:.*
-Data::Locations::print\(\): REF reference ignored.*
-End Of Warning\..*
-WARNING intercepted:.*
-Data::Locations::dump\(\): filename missing or empty.*
-End Of Warning\..*
-Printing to location 'level2' via file handle '\$fh'\..*
-Printing to location 'level1' explicitly via STDOUT\..*
-Printing last line to location 'level0' via METHOD 'print'\.
+$ref = <<"VERBATIM";
+Printing first line to location 'level0' via OPERATOR 'print'.
+Printing to location 'level1' via STDOUT.
+Printing to location 'level2' via default file handle '\$fh'.
+WARNING intercepted:
+Data::Locations::print(): reference 'REF' ignored at t/$self line 125
+End Of Warning.
+WARNING intercepted:
+Data::Locations::dump(): filename missing or empty at t/$self line 129
+End Of Warning.
+Printing to location 'level2' via file handle '\$fh'.
+Printing to location 'level1' explicitly via STDOUT.
+Printing last line to location 'level0' via METHOD 'print'.
 VERBATIM
 
-$ref =~ s!\n!!g;
-if ($txt =~ /$ref/s)
+if ($txt eq $ref)
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
 
@@ -201,42 +197,21 @@ $txt = join('', <FILE>);
 close(FILE);
 unlink($file);
 
-$ref = <<'VERBATIM';
-Now STDOUT goes to the screen again\..*
-Warning: REF reference ignored.*
-Warning: filename missing or empty.*
-WARNING intercepted:.*
-Data::Locations::print\(\): REF reference ignored.*
-End Of Warning\..*
-WARNING intercepted:.*
-Data::Locations::dump\(\): filename missing or empty.*
-End Of Warning\.
+$ref = <<"VERBATIM";
+Now STDOUT goes to the screen again.
+Warning: reference 'REF' ignored
+Warning: filename missing or empty
+WARNING intercepted:
+Data::Locations::print(): reference 'REF' ignored at t/$self line 125
+End Of Warning.
+WARNING intercepted:
+Data::Locations::dump(): filename missing or empty at t/$self line 129
+End Of Warning.
 VERBATIM
 
-$ref =~ s!\n!!g;
-if ($txt =~ /$ref/s)
+if ($txt eq $ref)
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
-
-#$txt = <<'VERBATIM';
-#Now STDOUT goes to the screen again.
-#Warning: REF reference ignored
-#Warning: filename missing or empty
-#WARNING intercepted:
-## Data::Locations::print(): REF reference ignored
-#File 'Bird:src:Pudge:pudgeprogs:perl:cpan:build:Data-Locations-4.3:t:18__example_3.t'; Line 125
-#End Of Warning.
-#WARNING intercepted:
-## Data::Locations::dump(): filename missing or empty
-#File 'Bird:src:Pudge:pudgeprogs:perl:cpan:build:Data-Locations-4.3:t:18__example_3.t'; Line 129
-#End Of Warning.
-#VERBATIM
-#
-#if ($txt =~ /$ref/s)
-#{print "ok $n\n";} else {print "not ok $n\n";}
-#$n++;
-
-$level0->filename("");
 
 __END__
 

@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.2
+                    Package "Data::Locations" Version 4.4
                   =========================================
 
 
@@ -10,7 +10,7 @@
 Prerequisites:
 --------------
 
-Perl version 5.004 (subversion 0) or higher, and a C compiler.
+Perl version 5.004 or higher.
 
 
 Preliminary steps for use with ActiveState's port of Perl 5.005:
@@ -44,14 +44,13 @@ Quick installation guide for experienced users:
 
     > perl Makefile.PL    > perl Makefile.PL      > perl Makefile.PL
     > make                > dmake                 > nmake
-    > make test           > dmake test            > nmake test
     > make install        > dmake install         > nmake install
 
 Detailed installation guide:
 ----------------------------
 
  1) Change directory to the directory that has been created by unpacking this
-    package ("cd Data-Locations-5.2").
+    package ("cd Data-Locations-4.4").
 
  2) Type "perl Makefile.PL" (or whatever the name and path of your Perl 5
     binary is).
@@ -64,52 +63,26 @@ Detailed installation guide:
     (For installation under Windows NT/95, use "dmake" (Borland C++) or
     "nmake" (MS Visual C++) instead!)
 
-    This will create a dynamically linkable library file that will be linked
-    to Perl later, at runtime, provided your system supports dynamic linking.
-
-    Please refer to the MakeMaker documentation for instructions on how
-    to build a new Perl with statically linked libraries (invoke "perldoc
-    ExtUtils::MakeMaker" for this), if your system does NOT support dynamic
-    linking!
-
-    Should you encounter any compiler warnings or errors (like the redefi-
-    nition of certain types already defined by your system), please contact
-    me via e-mail at <sb@engelschall.com>, sending me your compiler output
-    (both STDOUT and STDERR). Thank you!
-
-    This command also creates a temporary installation in the "blib" sub-
-    directory, which is used to run "make test", and from where the module
+    This will create a temporary installation in the "blib" subdirectory,
+    which is primarily used to run "make test", and from where the module
     is copied to its final destination by "make install".
 
  4) Now issue "make test" (or "dmake test" or "nmake test", respectively).
 
     The output should look somewhat like this:
 
-    PERL_DL_NONLAZY=1 /usr/sw/bin/perl -I./blib/arch -I./blib/lib
-    -I/usr/sw/pkg/perl/lib/5.00503/i386-freebsd -I/usr/sw/pkg/perl/lib/5.00503
-    -e 'use Test::Harness qw(&runtests $verbose); $verbose=0; runtests @ARGV;'
-    t/*.t
+    PERL_DL_NONLAZY=1 /sw/bin/perl -I./blib/arch -I./blib/lib
+    -I/sw/pkg/perl/lib/5.00502/PA-RISC1.1 -I/sw/pkg/perl/lib/5.00502
+    -e 'use Test::Harness qw(&runtests $verbose); $verbose=0;
+    runtests @ARGV;' t/*.t
     t/00____version.....ok
-    t/01________new.....ok
-    t/02___refcount.....ok
-    t/03___filename.....ok
-    t/04______print.....ok
-    t/05______loops.....ok
-    t/06_____printf.....ok
-    t/07____println.....ok
-    t/08_______read.....ok
-    t/09______reset.....ok
-    t/10___traverse.....ok
-    t/11_______dump.....ok
-    t/12_____delete.....ok
-    t/13___toplevel.....ok
-    t/14________tie.....ok
-    t/15__example_1.....ok
-    t/16__example_2.....ok
-    t/17__example_3.....ok
-    t/18__example_4.....ok
+    t/06______loops.....ok
+    t/16__example_1.....ok
+    t/17__example_2.....ok
+    t/18__example_3.....ok
+    t/19__example_4.....ok
     All tests successful.
-    Files=19, Tests=792, 8 wallclock secs (6.63 cusr + 0.78 csys = 7.41 CPU)
+    Files=6,  Tests=13,  2 wallclock secs ( 1.23 cusr +  0.14 csys =  1.37 CPU)
 
  5) At last, type "make install" (or "dmake install", "nmake install").
 
