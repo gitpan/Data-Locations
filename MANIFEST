@@ -1,6 +1,9 @@
 CHANGES
+INSTALL
 Locations.pm
 MANIFEST
 Makefile.PL
 README
+lib/Data/Locations/Proxy.pm
+lib/Data/Locations/Shell.pm
 lib/Tie/Handle.pm

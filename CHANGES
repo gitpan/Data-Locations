@@ -1,5 +1,5 @@
                   ===========================================
-                     Package "Data::Locations" Version 2.0
+                     Package "Data::Locations" Version 3.0
                   ===========================================
                        for Perl version 5.000 and higher
 
@@ -9,6 +9,38 @@
            modify it under the same terms as Perl itself.
 
 
+New features in version 3.0:
+----------------------------
+
+Two new modules have been added to this distribution:
+"Data::Locations::Proxy" and "Data::Locations::Shell".
+
+The first is needed for technical reasons only; the latter is a shell
+which makes the handling of locations which are tied to file handles
+more comfortable:
+
+The advantage of having "Data::Locations::Shell" is that you don't need
+TWO object references for the SAME location anymore: One for the location
+itself and one for the file handle the location has been tied to.
+
+Instead, you have only ONE object reference you can do everything with:
+Use it as a file handle in Perl's built-in functions for dealing with files,
+AND use it to invoke methods from the "Data::Locations" class, at the same
+time!
+
+Note that "Data::Locations::Shell" needs Perl 5.004 (or higher) in order
+to run (whereas "Data::Locations" can do with previous versions of Perl).
+
+Additionally, the two methods "set_filename()" and "get_filename()" have
+been replaced by a single method, "filename()". Wether the filename of the
+given location is set or returned depends on wether this method is called
+with or without a filename argument, respectively.
+
+To adapt your programs, you only need to replace "set_filename" and
+"get_filename" by just "filename" using global text search & replace.
+That's all.
+
+
 New features in version 2.0:
 ----------------------------
 
@@ -16,7 +48,7 @@ In version 2.0, the following new methods and features have been added:
 
   *  $location->printf($format,@items); # equivalent of the C library "printf"
 
-  *  $line = $location->read();         # to read the contents line by line
+  *  $item = $location->read();         # to read the contents item by item
 
   *  @list = $location->read();         # to read the contents all at once
 
@@ -36,7 +68,7 @@ In version 2.0, the following new methods and features have been added:
 
   *  printf FILEHANDLE $format, @items;
 
-  *  $line = <FILEHANDLE>;              # to read the contents line by line
+  *  $item = <FILEHANDLE>;              # to read the contents item by item
 
   *  @list = <FILEHANDLE>;              # to read the contents all at once
 
@@ -45,12 +77,12 @@ slightly in order to satisfy the naming conventions of CPAN (= Comprehensive
 Perl Archive Network) and The Perl 5 Module List:
 
 Use global search & replace to substitute "Data::Locations" for "Locations"
-in all your programs that "use Locations".
+in all your programs that "use Locations;".
 
-Note also that tying locations to file handles requires Perl version 5.004,
-whereas this module is otherwise perfectly happy with previous versions of
-Perl 5 as well! (But see the "Preliminary steps for use with Perl prior to
-version 5.004" in the "README" file in this distribution)
+Note also that tying locations to file handles requires Perl version 5.004
+(or higher), whereas this module is otherwise perfectly happy with previous
+versions of Perl 5 as well! (But see the "Preliminary steps for use with
+Perl versions prior to 5.004" in the file "INSTALL" in this distribution)
 
 
 Version history in details:
@@ -60,7 +92,7 @@ Version 1.0 was the initial release.
 
 ----------------------------------------------------------------------------
 
-Version 1.1 fixes a bug in the detection of potential infinite recursions
+Version 1.1 fixed a bug in the detection of potential infinite recursions
 (this bug did not cause any malfunction, but increased the time needed for
 this check unnecessarily!).
 
@@ -73,8 +105,8 @@ to understand, and the documentation was brushed up at a few places.
 
 ----------------------------------------------------------------------------
 
-In version 2.0, the following new methods have been added:
-"printf()", "read()", "reset()" and "tie()".
+In version 2.0, the following new methods were added: "printf()", "read()",
+"reset()" and "tie()".
 
 Moreover, a new companion module named "Tie::Handle" has been added to this
 distribution which handles the tying of (arbitrary) objects to file handles,
@@ -82,8 +114,22 @@ which is used to tie locations to file handles in this case.
 
 This new module allows you to use file handles to write data to and to read
 data from locations using the normal Perl syntax for file handles, i.e.,
-"print FILEHANDLE @items;" and "$line = <FILEHANDLE>;", to give you just
+"print FILEHANDLE @items;" and "$item = <FILEHANDLE>;", to give you just
 two examples.
+
+----------------------------------------------------------------------------
+
+In version 3.0, two new modules have been added to this distribution:
+"Data::Locations::Proxy" and "Data::Locations::Shell".
+
+The first is a wrapper for "IO::Handle", the latter inherits from
+"Tie::Handle" and is a wrapper around "Data::Locations".
+
+See the manpage of "Data::Locations::Shell" for a list of available
+methods and features.
+
+Moreover, the two methods "set_filename()" and "get_filename()" have
+been replaced by a single method, "filename()".
 
 ----------------------------------------------------------------------------
 

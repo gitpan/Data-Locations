@@ -1,0 +1,53 @@
+                  ===========================================
+                     Package "Data::Locations" Version 3.0
+                  ===========================================
+                       for Perl version 5.000 and higher
+
+
+           Copyright (c) 1997 by Steffen Beyer. All rights reserved.
+           This package is free software; you can redistribute and/or
+           modify it under the same terms as Perl itself.
+
+
+Preliminary steps for use with Perl versions prior to 5.004:
+------------------------------------------------------------
+
+Edit the file "Locations.pm" in this distribution and
+
+  -  remove the line "require Tie::Handle;"
+
+  -  remove the string "Tie::Handle" from the line
+     "@ISA = qw(Exporter Tie::Handle);"
+
+Then build and install this package as described below.
+
+Note that you will not be able to use file handles tied to
+locations in this case.
+
+Note also that you will not be able to use the module
+"Data::Locations::Shell", either!
+
+The rest of the functionality of the "Data::Locations" module
+is not impaired by this measure in any way, however.
+
+
+Installation:
+-------------
+
+IMPORTANT:
+
+Unpack and build this distribution OUTSIDE the Perl installation
+tree!
+
+After unpacking, change directory to this distribution's directory 
+("cd Data-Locations-3.0/").
+
+Then simply install this package using the following commands:
+
+                            % perl Makefile.PL
+                            % make
+                            % make install
+
+
+----------------------------------------------------------------------------
+

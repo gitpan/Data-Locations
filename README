@@ -1,5 +1,5 @@
                   ===========================================
-                     Package "Data::Locations" Version 2.0
+                     Package "Data::Locations" Version 3.0
                   ===========================================
                        for Perl version 5.000 and higher
 
@@ -12,7 +12,7 @@
 What does it do:
 ----------------
 
-Locations - recursive placeholders in the data you generate
+Data::Locations - recursive placeholders in the data you generate
 
 "Locations" free you from the need to GENERATE data in the
 same order in which it will be USED later.
@@ -39,7 +39,7 @@ in memory only once.
 
 Maybe a picture will help to better understand this concept:
 
-Think of "Locations" as folders (or drawers) containing papers
+Think of "locations" as folders (or drawers) containing papers
 in a sequential order, most of which contain printable text or
 data, while some may contain the name of another folder (or drawer).
 
@@ -51,7 +51,8 @@ to print the remaining papers of the current location. And so forth,
 in a recursive descent.
 
 Note that you are not confined to dumping locations to a file,
-you can also process them directly in memory!
+you can also process them directly in memory (you can read back
+the contents of any given location item after item or all at once)!
 
 Note further that you may create as many locations with as many
 embedded locations, as many nesting levels deep as your available
@@ -61,42 +62,45 @@ Not even Clodsahamp's multidimensionally expanded tree house (see
 Alan Dean Foster's fantasy novel "Spellsinger" for more details!)
 can compare with this! :-)
 
+Possible applications of this module are for example:
 
-Preliminary steps for use with Perl prior to version 5.004:
------------------------------------------------------------
+  -  source code generation
 
-Edit the file "Locations.pm" in this distribution and
+  -  web page generation
 
-  -  remove the line "require Tie::Handle;"
+  -  generating mail messages in mime format
 
-  -  remove the string "Tie::Handle" from the line
-     "@ISA = qw(Exporter Tie::Handle);"
+  -  filling in forms
 
-Then build and install this package as described below.
+  -  ...
 
-Note that you will not be able to use file handles tied to
-locations in this case.
+Let your fantasy go wild inventing more applications!
 
-The rest of the functionality of this module is not affected
-by this, however.
+(And tell me about them!)
+
+See the "Tie::Handle(3)" manpage and the example given at the end of the
+"Data::Locations(3)" manpage for how to tie data locations to file handles
+in order to further simplify writing data to and reading data from locations.
+
+See the "Data::Locations::Shell(3)" manpage for even more ease of use:
+Use only ONE object reference instead of TWO (one for the location itself
+and one for the file handle the location has been tied to) which you can
+use as a file handle AND as a "Data::Locations" object reference, at the
+same time!
+
+Note that this module is fully compatible with "Data::Locations",
+i.e., if you change all occurrences of "Data::Locations" in your
+program to "Data::Locations::Shell", your program should work
+exactly as before - with the added benefit that you don't need to
+"tie()" your locations to a file handle explicitly anymore in order
+to be able to use "print $location @items;" and "$item = <$location>;",
+for instance.
 
 
 Installation:
 -------------
 
-Simply install this module using the following commands:
-
-                            % perl Makefile.PL
-                            % make
-                            % make install
-
-
-Documentation:
---------------
-
-To see the module's documentation, use the command "man Data::Locations"
-thereafter. See "man Tie::Handle" for how to use file handles tied to
-locations.
+See the file "INSTALL" in this distribution.
 
 
 Version history:

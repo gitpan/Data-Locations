@@ -21,14 +21,14 @@ require Tie::Handle;
 
 @EXPORT_OK = qw();
 
-$VERSION = "2.0";
+$VERSION = "3.0";
 
 @Data::Locations::List = ();  ##  sequential list of all existing locations
 
 sub new
 {
     croak
-  "Usage: \$newlocation = {Data::Locations,\$location}->new([\$filename]);"
+  'Usage: $newlocation = {Data::Locations,$location}->new([$filename]);'
     if ((@_ < 1) || (@_ > 2));
 
     my($outer) = shift;
@@ -39,7 +39,7 @@ sub new
 
     if (ref($filename))
     {
-        croak "Data::Locations::new(): reference not allowed as filename";
+        croak 'Data::Locations::new(): reference not allowed as filename';
     }
 
     $inner = { };
@@ -71,30 +71,29 @@ sub new
     return( $inner );
 }
 
-sub set_filename
+sub filename
 {
-    croak "Usage: \$location->set_filename(\$filename);"
-      if (@_ != 2);
-
-    my($location,$filename) = @_;
-
-    if (ref($filename))
-    {
-        croak
-      "Data::Locations::set_filename(): reference not allowed as filename";
-    }
-
-    $location->{'file'} = $filename;
-}
-
-sub get_filename
-{
-    croak "Usage: \$location->get_filename();"
-      if (@_ != 1);
+    croak
+  'Usage: $location->filename($filename); | $filename = $location->filename();'
+    if ((@_ < 1) || (@_ > 2));
 
     my($location) = shift;
+    my($filename);
 
-    return( $location->{'file'} );
+    if (@_ > 0)
+    {
+        $filename = shift;
+        if (ref($filename))
+        {
+            croak
+          'Data::Locations::filename(): reference not allowed as filename';
+        }
+        $location->{'file'} = $filename;
+    }
+    else
+    {
+        return( $location->{'file'} );
+    }
 }
 
 #################################################################
@@ -106,7 +105,7 @@ sub get_filename
 
 sub self_contained
 {
-    croak "Usage: if (self_contained(\$outer,\$inner))"
+    croak 'Usage: if (self_contained($outer,$inner))'
       if (@_ != 2);
 
     my($outer,$inner) = @_;
@@ -124,47 +123,57 @@ sub self_contained
 
 sub print
 {
-    croak "Usage: \$location->print(\@items);"
+    croak 'Usage: $location->print(@items);'
       if (@_ < 1);
 
     my($outer) = shift;
-    my($inner,$message);
+    my($item,$inner,$message);
 
-    foreach $inner (@_)
+    foreach $item (@_)
     {
-        if (ref($inner))
+        if (ref($item))
         {
-            if (ref($inner) eq 'Data::Locations')
+            if    (ref($item) eq 'Data::Locations')  ##  most frequent first
             {
-                if (self_contained($outer,$inner))
-                {
-                    croak
-                  "Data::Locations::print(): infinite recursion loop attempted";
-                }
-                else
-                {
-                    push(@{$outer->{'data'}}, $inner);
-                    $outer->{'inner'}->{$inner} = $inner;
-                    $inner->{'outer'}->{$outer} = $outer;
-                }
+                $inner = $item;
+            }
+            elsif (ref($item) eq 'Data::Locations::Proxy')
+            {
+                $inner = ${${tied *{$item}}};
+            }
+            elsif (ref($item) eq 'Data::Locations::Shell')
+            {
+                $inner = ${$item};
             }
             else
             {
                 $message =
-  "Data::Locations::print(): illegal reference '".ref($inner)."' ignored";
+  "Data::Locations::print(): illegal reference '".ref($item)."' ignored";
                 carp $message if $^W;
+                next;
+            }
+            if (self_contained($outer,$inner))
+            {
+                croak
+              'Data::Locations::print(): infinite recursion loop attempted';
+            }
+            else
+            {
+                push(@{$outer->{'data'}}, $inner);
+                $outer->{'inner'}->{$inner} = $inner;
+                $inner->{'outer'}->{$outer} = $outer;
             }
         }
         else
         {
-            push(@{$outer->{'data'}}, $inner);
+            push(@{$outer->{'data'}}, $item);
         }
     }
 }
 
 sub println
 {
-    croak "Usage: \$location->println(\@items);"
+    croak 'Usage: $location->println(@items);'
       if (@_ < 1);
 
     my($location) = shift;
@@ -177,7 +186,7 @@ sub println
 
 sub printf
 {
-    croak "Usage: \$location->printf(\$format,\@items);"
+    croak 'Usage: $location->printf($format,@items);'
       if (@_ < 2);
 
     my($location) = shift;
@@ -195,7 +204,7 @@ sub printf
 
 sub dump_recursive
 {
-    croak "Usage: \$location->dump_recursive();"
+    croak 'Usage: $location->dump_recursive();'
       if (@_ != 1);
 
     my($location) = shift;
@@ -226,7 +235,7 @@ sub dump_recursive
 
 sub dump_location
 {
-    croak "Usage: \$ok = \$location->dump_location([\$filename]);"
+    croak 'Usage: $ok = $location->dump_location([$filename]);'
       if ((@_ < 1) || (@_ > 2));
 
     my($location) = shift;
@@ -238,7 +247,7 @@ sub dump_location
     if (ref($filename))
     {
         croak
-      "Data::Locations::dump_location(): reference not allowed as filename";
+      'Data::Locations::dump_location(): reference not allowed as filename';
     }
     if ($filename =~ /^\s*$/)
     {
@@ -264,7 +273,7 @@ sub dump_location
 sub dump
 {
     croak
-  "Usage: \$ok = Data::Locations->dump(); | \$ok = \$location->dump([\$filename]);"
+  'Usage: $ok = Data::Locations->dump(); | $ok = $location->dump([$filename]);'
     if ((@_ < 1) || (@_ > 2) || ((@_ == 2) && !ref($_[0])));
 
     my($location) = shift;
@@ -277,7 +286,7 @@ sub dump
             if (ref($_[0]))
             {
                 croak
-              "Data::Locations::dump(): reference not allowed as filename";
+              'Data::Locations::dump(): reference not allowed as filename';
             }
             return( $location->dump_location($_[0]) );
         }
@@ -306,9 +315,9 @@ sub dump
 ##                                                           ##
 ###############################################################
 
-sub readline
+sub readitem
 {
-    croak "Usage: \$line = \$location->readline();"
+    croak 'Usage: $item = $location->readitem();'
       if (@_ != 1);
 
     my($location) = shift;
@@ -331,7 +340,7 @@ sub readline
         if ($index > $#{$array})
         {
             shift(@{$stack});
-            return( $location->readline() );
+            return( $location->readitem() );
         }
         else
         {
@@ -344,7 +353,7 @@ sub readline
                     $entry = [ 0, $item->{'data'} ];
                     unshift(@{$stack}, $entry);
                 }
-                return( $location->readline() );
+                return( $location->readitem() );
             }
             else
             {
@@ -366,14 +375,14 @@ sub readline
 
 sub readlist
 {
-    croak "Usage: \@list = \$location->readlist();"
+    croak 'Usage: @list = $location->readlist();'
       if (@_ != 1);
 
     my($location) = shift;
     my(@result);
     my($item);
 
-    while ($item = $location->readline())
+    while ($item = $location->readitem())
     {
         push(@result, $item);
     }
@@ -382,7 +391,7 @@ sub readlist
 
 sub read
 {
-    croak "Usage: \$line = \$location->read(); | \@list = \$location->read();"
+    croak 'Usage: $item = $location->read(); | @list = $location->read();'
       if (@_ != 1);
 
     my($location) = shift;
@@ -395,14 +404,14 @@ sub read
         }
         else
         {
-            return( $location->readline() );
+            return( $location->readitem() );
         }
     }
 }
 
 sub reset
 {
-    croak "Usage: {Data::Locations,\$location}->reset();"
+    croak 'Usage: {Data::Locations,$location}->reset();'
       if (@_ != 1);
 
     my($location) = shift;
@@ -429,13 +438,45 @@ sub reset
 ###############################################################
 ##                                                           ##
 ##  The following method is intended for internal use only!  ##
+##                                                           ##
+###############################################################
+
+sub open
+{
+    croak 'Usage: $location->open();'
+      if (@_ != 1);
+
+    my($location) = shift;
+
+    $location->reset();
+}
+
+###############################################################
+##                                                           ##
+##  The following method is intended for internal use only!  ##
+##                                                           ##
+###############################################################
+
+sub close
+{
+    croak 'Usage: $location->close();'
+      if (@_ != 1);
+
+    my($location) = shift;
+
+    $location->reset();
+}
+
+###############################################################
+##                                                           ##
+##  The following method is intended for internal use only!  ##
 ##  Use it only if you know exactly what you are doing!      ##
 ##                                                           ##
 ###############################################################
 
 sub traverse_recursive
 {
-    croak "Usage: \$location->traverse_recursive(\\&callback_function);"
+    croak 'Usage: $location->traverse_recursive(\&callback_function);'
       if (@_ != 2);
 
     my($location,$callback) = @_;
@@ -443,7 +484,7 @@ sub traverse_recursive
 
     if (ref($callback) ne 'CODE')
     {
-        croak "Data::Locations::traverse_recursive(): not a code reference";
+        croak 'Data::Locations::traverse_recursive(): not a code reference';
     }
 
     foreach $item (@{$location->{'data'}})
@@ -465,21 +506,20 @@ sub traverse_recursive
 ####################################################################
 ##                                                                ##
 ##  The following method is intended for experienced users only!  ##
-##  Use with extreme precaution!                                  ##
+##  Use with precaution!                                          ##
 ##                                                                ##
 ####################################################################
 
 sub traverse
 {
-    croak
-  "Usage: {Data::Locations,\$location}->traverse(\\&callback_function);"
-    if (@_ != 2);
+    croak 'Usage: {Data::Locations,$location}->traverse(\&callback_function);'
+      if (@_ != 2);
 
     my($location,$callback) = @_;
 
     if (ref($callback) ne 'CODE')
     {
-        croak "Data::Locations::traverse(): not a code reference";
+        croak 'Data::Locations::traverse(): not a code reference';
     }
 
     if (ref($location))  ##  object method
@@ -500,7 +540,7 @@ sub traverse
 
 sub delete
 {
-    croak "Usage: {Data::Locations,\$location}->delete();"
+    croak 'Usage: {Data::Locations,$location}->delete();'
       if (@_ != 1);
 
     my($outer) = shift;
@@ -537,28 +577,6 @@ sub delete
         undef @Data::Locations::List;
         @Data::Locations::List = ();
     }
-}
-
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
-
-sub open
-{
-    $_[0]->reset();
-}
-
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
-
-sub close
-{
-    $_[0]->reset();
 }
 
 1;
@@ -606,7 +624,8 @@ to print the remaining papers of the current location. And so forth,
 in a recursive descent.
 
 Note that you are not confined to dumping locations to a file,
-you can also process them directly in memory!
+you can also process them directly in memory (you can read back
+the contents of any given location item after item or all at once)!
 
 Note further that you may create as many locations with as many
 embedded locations, as many nesting levels deep as your available
@@ -619,6 +638,20 @@ can compare with this! C<:-)>
 See L<Tie::Handle(3)> and the example given at the end of this manpage
 for how to tie data locations to file handles in order to further simplify
 writing data to and reading data from locations.
+
+See L<Data::Locations::Shell(3)> for even more ease of use: Use only
+ONE object reference instead of TWO (one for the location itself and
+one for the file handle the location has been tied to) which you can
+use as a file handle AND as a "Data::Locations" object reference, at
+the same time!
+
+Note that this module is fully compatible with "Data::Locations", i.e.,
+if you change all occurrences of "Data::Locations" in your program to
+"Data::Locations::Shell", your program should work exactly as before -
+with the added benefit that you don't need to "tie()" your locations
+to a file handle explicitly anymore in order to be able to use
+"C<print $location @items;>" and "C<$item = E<lt>$locationE<gt>;>",
+for instance.
 
 =head1 SYNOPSIS
 
@@ -646,11 +679,11 @@ C<$sublocation = $location-E<gt>new($filename);>
 
 =item *
 
-C<$location-E<gt>set_filename($filename);>
+C<$location-E<gt>filename($filename);>
 
 =item *
 
-C<$filename = $location-E<gt>get_filename();>
+C<$filename = $location-E<gt>filename();>
 
 =item *
 
@@ -678,7 +711,7 @@ C<$ok = $location-E<gt>dump($filename);>
 
 =item *
 
-C<$line = $location-E<gt>read();>
+C<$item = $location-E<gt>read();>
 
 =item *
 
@@ -761,17 +794,17 @@ Note that CLASS METHODS are invoked using the NAME of their class, i.e.,
 are invoked using an object reference such as returned by the class's
 object constructor method (which "new()" happens to be).
 
-Any location that you intend to dump to a file later on in your program
-needs to have a filename associated with it, which you can either specify
-using one of the variants of the "new()" method where you supply a filename
-(as the one shown immediately below), or by setting this filename using the
-method "set_filename()" (see further below), or by specifying an explicit
-filename when invoking the "dump()" method (see also further below) itself
-on a particular location.
+Any location that you intend to dump to a file later on in your program needs
+to have a filename associated with it, which you can either specify using one
+of the variants of the "new()" method where you supply a filename (as the one
+shown immediately below), or by setting this filename using the method
+"filename()" (see further below), or by specifying an explicit filename when
+invoking the "dump()" method itself (see also further below) on a particular
+location.
 
 Otherwise an error will occur when you try to dump the location (in fact,
 a warning message is printed to the screen (if the C<-w> switch is set)
-and the location will simply not be dumped to a file but program execution
+and the location will simply not be dumped to a file, but program execution
 continues).
 
 =item *
@@ -804,8 +837,8 @@ which they are embedded), unless you want to dump this location to a
 file of its own, additionally.
 
 In the latter case, use the variant of the "new()" method shown
-immediately below or the method "set_filename()" (see below) to
-set this filename, or call the method "dump()" (explained further
+immediately below or the method "filename()" (see below) to set
+this filename, or call the method "dump()" (explained further
 below) with an appropriate filename argument.
 
 =item *
@@ -822,7 +855,7 @@ what filenames you may use (i.e., which filenames are legal)!
 
 =item *
 
-C<$location-E<gt>set_filename($filename);>
+C<$location-E<gt>filename($filename);>
 
 This object method stores a filename along with the given location
 which will be used as the default filename when dumping that location.
@@ -830,16 +863,19 @@ which will be used as the default filename when dumping that location.
 You may set the filename associated with any given location using this
 method any number of times.
 
-See the method "get_filename()" immediately below for retrieving
-the default filename that has been stored along with a given location.
+Note that you can use this very same method "filename()" in order to
+retrieve the default filename that has been stored along with a given
+location if you call it WITHOUT any parameters (see also immediately
+below).
 
 =item *
 
-C<$filename = $location-E<gt>get_filename();>
+C<$filename = $location-E<gt>filename();>
 
-This object method returns the default filename that has previously
-been stored along with the given location, using either the method
-"new()" or the method "set_filename()".
+When called without parameters, this object method returns the default
+filename that has previously been stored along with the given location,
+using either the method "new()" or this very same method, "filename()"
+(but with a filename passed to it as its (only) argument).
 
 =item *
 
@@ -866,7 +902,7 @@ program which you need at several places in your output.
 
 This saves a lot of memory because only a reference of the embedded
 location is stored in every embedding location instead of all the
-data, which is stored only once!
+data, which is stored in memory only once!
 
 Note that other references than "Data::Locations" object references are
 illegal, trying to "print" such a reference to a location will result
@@ -925,7 +961,7 @@ C<$ok = Data::Locations-E<gt>dump();>
 
 This CLASS METHOD dumps all top-level locations to their default
 files (whose filenames must have been stored previously along with
-each location using the method "new()" or "set_filename()").
+each location using the method "new()" or "filename()").
 
 Note that a warning message will be printed (if the C<-w> switch is set)
 if any of the top-level locations happens to lack a default filename and
@@ -964,7 +1000,7 @@ C<$ok = $location-E<gt>dump();>
 
 The OBJECT METHOD "dump()" dumps the given location to its default
 file (whose filename must have been stored previously along with
-this location using the method "new()" or "set_filename()").
+this location using the method "new()" or "filename()").
 
 Note that a warning message will be printed (if the C<-w> switch is set)
 if the location happens to lack a default filename and that the location
@@ -1012,8 +1048,8 @@ filename stored with the given location will be used, NOT the filename
 that you specified explicitly the last time when you called "dump()"!
 
 Should any problem arise with the given location (for instance if the
-given filename is invalid or if Perl was unable to open the specified
-file), then this method returns "false" (0).
+given filename is invalid or empty or if Perl was unable to open the
+specified file), then this method returns "false" (0).
 
 The method returns "true" (1) if the given location has been
 successfully written to the specified file.
@@ -1033,7 +1069,7 @@ the object method "delete()" (explained further below) EXPLICITLY.
 
 =item *
 
-C<$line = $location-E<gt>read();>
+C<$item = $location-E<gt>read();>
 
 In "scalar" context, the object method "read()" returns the next item
 of data from the given location.
@@ -1043,7 +1079,7 @@ will automatically start at the beginning.
 
 Otherwise each call of "read()" will return successive items from
 the given location, thereby traversing the given location recursively
-through all embedded locations it may or may not contain.
+through all embedded locations which it may or may not contain.
 
 To start reading at the beginning of the given location again, invoke
 the method "reset()" (see a little further below) on that location.
@@ -1060,7 +1096,8 @@ Remember to use "reset()" if this is not what you want.
 
 Finally, note that you can read from two (or any number of) different
 locations at the same time, even if any of them is embedded (directly
-or indirectly) in any other, without any interference!
+or indirectly) in any other of the locations you are currently reading
+from, without any interference!
 
 This is because the state information associated with each "read()"
 operation is stored along with the (given) location for which the
@@ -1080,8 +1117,8 @@ just before calling "read()".
 
 The method returns a single (possibly very long!) list containing
 all the items of data the given location and all of its embedded
-locations (if any) contain - i.e., the data contained in all these
-nested locations is returned in a "flattened" way.
+locations (if any) contain - in other words, the data contained
+in all these nested locations is returned in a "flattened" way.
 
 The method returns an empty list if the given location is empty
 or if the last "read()" read past the end of the data in the
@@ -1204,7 +1241,7 @@ locations is unnecessary if, subsequently, you do not print anything to
 this location anymore!
 
 If the given location is a top-level location, you might want to set the
-associated filename to "/dev/null", though, using the method "set_filename()"
+associated filename to "/dev/null", though, using the method "filename()"
 (before or after deleting the location, this makes no difference).
 
 BEWARE that the locations that were previously embedded in the given
@@ -1230,11 +1267,11 @@ and allows you to tie a file handle to a location so that you can
 access the location as though it was a file, using Perl's built-in
 functions for handling files.
 
-Note that this feature depends on Perl version 5.004 or higher and cannot
-be used with previous versions of Perl (see the installation instructions
-in the "README" file in this distribution for how to disable this feature
-in such a case, since trying to use this feature with Perl versions prior
-to 5.004 will result in compilation errors).
+Note that this feature depends on Perl version 5.004 (or higher) and that
+it cannot be used with previous versions of Perl (see the installation
+instructions in the file "INSTALL" in this distribution for how to disable
+this feature in such a case, since trying to use this feature with Perl
+versions prior to 5.004 will result in compilation errors).
 
 You can either specify the file handle to which your location should
 be tied by name (called a "symbolic" file handle) or by reference
@@ -1257,8 +1294,9 @@ dealing with files on that location (via its associated file handle)!
 See L<Tie::Handle(3)> and L<perlfunc(1)> for more details, as well as
 the example given at the end of this manpage.
 
-Note however that "open()" and "close()" on a tied file handle have no
-effect on the location which is tied to it!
+Note however that calling the Perl (built-in) functions "open()" and
+"close()" on a tied file handle has no effect on the location which
+is tied to it!
 
 (But beware that they attempt to open and close the specified file,
 respectively, even though this is useless in this case!)
@@ -1266,8 +1304,8 @@ respectively, even though this is useless in this case!)
 Note also that you will get errors if you try to read from a tied file
 handle which you opened for output only using "open()", or vice-versa!
 
-Therefore it is best not to use "open()" and "close()" on tied file
-handles at all.
+Therefore it is best not to use the built-in Perl functions "open()"
+and "close()" on tied file handles at all.
 
 Instead, if you want to restart reading from the beginning of any given
 location, rather invoke the method "reset()" on it!
@@ -1322,8 +1360,8 @@ location.
   $head = Data::Locations->new();  ##  E.g. for interface definitions
   $body = Data::Locations->new();  ##  E.g. for implementation
 
-  $head->set_filename("example.h");
-  $body->set_filename("example.c");
+  $head->filename("example.h");
+  $body->filename("example.c");
 
   $common = $head->new();    ##  Embed a new location in "$head"
   $body->print($common);     ##  Embed this same location in "$body"
@@ -1364,11 +1402,11 @@ location.
 
   $library->print("stdio.h");
 
-  $copyright->set_filename("default.txt");
+  $copyright->filename("default.txt");
 
   $copyright->dump(">-");
 
-  print "default filename = '", $copyright->get_filename(), "'\n";
+  print "default filename = '", $copyright->filename(), "'\n";
 
   Data::Locations->dump();
 
@@ -1619,7 +1657,7 @@ in a string (which is printed to the screen in this example):
   sub list
   {
       $string .= $ruler;
-      $string .= "\"" . $_[0]->get_filename() . "\":\n";
+      $string .= "\"" . $_[0]->filename() . "\":\n";
       $string .= $ruler;
       $_[0]->traverse(\&concat);
       $string .= "\n" unless ($string =~ /\n$/);
@@ -1637,14 +1675,14 @@ in a string (which is printed to the screen in this example):
 
 =head1 SEE ALSO
 
-Tie::Handle(3), perl(1), perldata(1), perlfunc(1),
-perlsub(1), perlmod(1), perlref(1), perlobj(1),
-perlbot(1), perltoot(1), perltie(1), printf(3),
-sprintf(3).
+Data::Locations::Shell(3), Tie::Handle(3),
+perl(1), perldata(1), perlfunc(1), perlsub(1),
+perlmod(1), perlref(1), perlobj(1), perlbot(1),
+perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 2.0.
+This man page documents "Data::Locations" version 3.0.
 
 =head1 AUTHOR
 
