@@ -48,7 +48,7 @@ $F4->print($A5);
 
 eval { $C1->print($D1); };
 
-if ($@ =~ /^Data::Locations::print\(\): infinite recursion loop attempted/)
+if ($@ =~ /Data::Locations::print\(\): infinite recursion loop attempted/)
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
 
@@ -56,7 +56,7 @@ $B1->print($D1);
 
 eval { $B2->print($A3); };
 
-if ($@ =~ /^Data::Locations::print\(\): infinite recursion loop attempted/)
+if ($@ =~ /Data::Locations::print\(\): infinite recursion loop attempted/)
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
 
@@ -66,9 +66,16 @@ $B2->print($A3);
 
 eval { $B1->print($D1); };
 
-if ($@ =~ /^Data::Locations::print\(\): infinite recursion loop attempted/)
+if ($@ =~ /Data::Locations::print\(\): infinite recursion loop attempted/)
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
+
+$A1->filename("");
+$A2->filename("");
+$A3->filename("");
+$A4->filename("");
+$A5->filename("");
+$D1->filename("");
 
 __END__
 

@@ -109,5 +109,9 @@ if ($txt eq $ref)
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
 
+$head->filename("");
+$body->filename("");
+$copyright->filename("");
+
 __END__
 
