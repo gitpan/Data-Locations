@@ -1,0 +1,78 @@
+                  =========================================
+                    Package "Data::Locations" Version 4.1
+                  =========================================
+
+
+                  Copyright (c) 1997, 1998 by Steffen Beyer.
+                             All rights reserved.
+
+
+Prerequisites:
+--------------
+
+Perl version 5.004 or higher.
+
+
+Installation:
+-------------
+
+=============================================================================
+ALWAYS unpack and build Perl modules OUTSIDE the Perl source and installation
+tree! (You might otherwise inadvertently corrupt your Perl installation!)
+=============================================================================
+
+Note that installation under Windows NT/95 is easiest with the "native"
+"Perl for Win32" port by Perl developer Gurusamy Sarathy, available from:
+
+                http://www.perl.com/CPAN/authors/id/GSAR/
+
+Quick installation guide for experienced users:
+-----------------------------------------------
+
+    UNIX:                 Win32/Borland C++:      Win32/MS Visual C++:
+    =====                 ==================      ====================
+
+    > perl Makefile.PL    > perl Makefile.PL      > perl Makefile.PL
+    > make                > dmake                 > nmake
+    > make install        > dmake install         > nmake install
+
+Detailed installation guide:
+----------------------------
+
+ 1) Change directory to the directory that has been created by unpacking this
+    package ("cd Data-Locations-4.1").
+
+ 2) Type "perl Makefile.PL" (or whatever the name and path of your Perl 5
+    binary is).
+
+    This will create a "Makefile" with the appropriate parameters for your
+    system (for instance, where the install directories are, and so on).
+
+ 3) Type "make".
+
+    (For installation under Windows NT/95, use "dmake" (Borland C++) or
+    "nmake" (MS Visual C++) instead!)
+
+    This will create a temporary installation in the "blib" subdirectory,
+    which is normally used to run "make test", and from where the module
+    is copied to its final destination by "make install".
+
+ 4) There are currently no tests defined for this module.
+
+    Developing a test suite for this module is hard.
+
+    Moreover, there might be platform dependencies concerning filenames
+    or -paths.
+
+    (The module can be used on all platforms, though, because it simply
+    passes through all filenames.)
+
+    I have tested this module thoroughly on my development platform,
+    and since it is written in plain Perl and doesn't use any external
+    modules, it should run equally well on any platform supporting Perl.
+
+ 5) At last, type "make install" (or "dmake install", "nmake install").
+
+ 6) Share and enjoy!
+
+

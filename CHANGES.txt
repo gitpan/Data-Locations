@@ -1,0 +1,79 @@
+                  =========================================
+                    Package "Data::Locations" Version 4.1
+                  =========================================
+
+
+                  Copyright (c) 1997, 1998 by Steffen Beyer.
+                             All rights reserved.
+
+
+Version history:
+----------------
+
+Version 4.1   06.06.98
+
+ +  Fixed "delete()" to clear the self-references which prevented the eventual
+    garbage-collection.
+ +  Also fixed "delete()" to free the occupied memory at the time of the call
+    of this method rather than at shutdown time of the Perl interpreter.
+ +  Removed the unnecessary calls of the "FETCH()" method, resulting in an
+    improved performance.
+ +  Minor changes to make the code clearer and cleaner.
+ +  "Bug fixes" and additions in the documentation.
+
+Version 4.0   23.05.98
+
+ +  Extensive rewrite of this module and its documentation.
+ +  The companion modules "Tie::Handle", "Data::Locations::Proxy"
+    and "Data::Locations::Shell" are GONE, because "Data::Locations"
+    now are OBJECTS *and* FILE HANDLES *at the same time*, making
+    these three modules obsolete (this also means that this module
+    doesn't need ANY external modules anymore, except the core
+    modules from the standard Perl distribution "strict",
+    "Exporter", "Carp" and "Symbol").
+ +  This module now definitely needs Perl version 5.004 or better.
+ +  Enhanced support for Windows NT/95.
+ +  Added method "toplevel()".
+ +  BEWARE that embedding a top-level location in some other location
+    now automatically causes it to lose its "top-level" status, as
+    opposed to previous versions of this module.
+
+Version 3.0   29.07.97
+
+    Added modules "Data::Locations::Proxy" and "Data::Locations::Shell"
+    in order to make statements such as print $FH "text"; and $text = <$FH>;
+    possible.
+    The two methods "set_filename()" and "get_filename()" have been
+    replaced by a single method, "filename()".
+
+Version 2.1   25.07.97
+
+    Intermediate development version not publicly released.
+
+Version 2.0   24.07.97
+
+    Changed the name of this module from "Locations" to "Data::Locations".
+    Added new methods "printf()", "read()", "reset()" and "tie()".
+    Introduced a companion module "Tie::Handle" to tie file handles to
+    locations, in order to be able to print/read to/from locations using
+    Perl's built-in operators for accessing file handles instead of method
+    calls.
+
+Version 1.2   18.07.97
+
+    Intermediate development version not publicly released.
+
+Version 1.1   16.07.97
+
+    Fixed a bug in the automatic detection of potential infinite recursions.
+    (This bug did not cause any malfunction, but degraded performance
+    unnecessarily.)
+    Cleanup of the code of remnants such as "carp - exit" instead of "croak".
+    Improved the documentation.
+
+Version 1.0   14.07.97
+
+    First release.
+
+----------------------------------------------------------------------------
+
