@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 4.3
+                    Package "Data::Locations" Version 5.2
                   =========================================
 
 
@@ -30,9 +30,9 @@ and Christian Reiber <christian.reiber@zeppelin.de> for choosing this module
 for use in a large software project and for being my first guinea pigs... ;-)
 
 I owe many thanks to Marc Lehmann <pcg@goof.com> for thoroughly testing this
-module, for discovering and reporting the bug fixed in version 5.0, and for
+module, for discovering and reporting the bug fixed in version 4.3, and for
 pointing out a design weakness in the implementation of this module, which
-has also been fixed in version 5.0.
+has been fixed in version 5.0.
 
 Also many thanks to Graham Barr <gbarr@ti.com> for responding to my bug
 report concerning the bug mentioned above, which I filed because it was
@@ -45,5 +45,20 @@ previous versions of Perl, which had canceled out each other in the past.
 
 Moreover, I am especially grateful to Gurusamy Sarathy <gsar@umich.edu>
 for bearing with me and for investigating this bug together with me.
+
+Special thanks go to the MacPerl CPAN Testers team Paul J. Schinder
+<schinder@pobox.com>, Arved Sandstrom <Arved_37@chebucto.ns.ca> and
+Chris Nandor <pudge@pobox.com> for their invaluable help in getting
+the test case suite right for the MacOS platform (which has some
+peculiarities concerning error messages).
+
+Especially Arved Sandstrom <Arved_37@chebucto.ns.ca> was indefatigable
+in his testing of different versions of the regression test suite and
+in providing me with the necessary feedback (and output from his system)
+for my corrections.
+
+Many thanks go to the CPAN testers team <cpan-testers@perl.org> in general
+for all their efforts and for discussing (and settling) the issue of the
+failing test script with me (the one which has been fixed in version 5.1).
 
 
