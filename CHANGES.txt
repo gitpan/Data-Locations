@@ -1,14 +1,23 @@
                   =========================================
-                    Package "Data::Locations" Version 4.2
+                    Package "Data::Locations" Version 4.3
                   =========================================
 
 
-                  Copyright (c) 1997, 1998 by Steffen Beyer.
+               Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
                              All rights reserved.
 
 
 Version history:
 ----------------
+
+Version 4.3   25.02.99
+
+ +  Fixed the bug in "new()" which manifested itself with perl 5.005 and
+    which caused ``print $location "Text";'' to fail.
+ +  Added a warning to the documentation that class methods such as
+    "Data::Locations->dump();" should only be used if your script
+    has the exclusive use of the "Data::Locations" module.
+ +  Finally managed to add a (still rudimentary) regression test suite.
 
 Version 4.2   07.09.98
 

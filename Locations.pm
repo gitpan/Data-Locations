@@ -1,7 +1,7 @@
 
 ###############################################################################
 ##                                                                           ##
-##    Copyright (c) 1997, 1998 by Steffen Beyer.                             ##
+##    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.                       ##
 ##    All rights reserved.                                                   ##
 ##                                                                           ##
 ##    This package is free software; you can redistribute it                 ##
@@ -12,21 +12,12 @@
 package Data::Locations;
 
 use strict;
-use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use vars qw($VERSION);
 
 use Carp;
-
 use Symbol;
 
-require Exporter;
-
-@ISA = qw(Exporter);
-
-@EXPORT = qw();
-
-@EXPORT_OK = qw();
-
-$VERSION = "4.2";
+$VERSION = "4.3";
 
 my $Dummy = '[Error: stale reference!]';  ##  Dummy class name
 
@@ -47,30 +38,38 @@ sub new
 
     $file = '';
     $file = shift if (@_ > 0);
-
-    if (ref($file))
+    if (defined $file)
     {
-        croak "${Class}::new(): reference not allowed as filename";
+        if (ref($file))
+        {
+            croak "${Class}::new(): reference not allowed as filename";
+        }
+        else { $file = "$file"; }
     }
+    else { $file = ''; }
 
-    $name = 'LOCATION' . $Count++;                     ## Generate unique name
+    $name = 'LOCATION' . $Count++;   ## Generate a unique name
+
 no strict "refs";
-    $inner = \*{$Class.'::'.$name};                    ## Create typeglob ref
+    $inner = \*{$Class.'::'.$name};  ## Create a reference to glob value
 use strict "refs";
-    bless($inner, $Class);                             ## Bless into object
-    ${*{$Data::Locations::{$name}}} = $inner;          ## Store ref in $ slot
-    tie(*{$Data::Locations::{$name}}, $Class, $inner); ## Tie glob to itself
 
-    @{*{$inner}} = ( );                                ## Uses @ slot of glob
+    bless($inner, $Class);           ## Bless glob to become an object
 
-    ${*{$inner}}{'file'}  = $file;                     ## Uses % slot of glob
+    tie(*{$inner}, $Class, $inner);  ## Tie glob to itself
+
+    ${*{$inner}} = $inner;           ## Store copy of ref in $ slot of glob
+
+    @{*{$inner}} = ( );              ## Use @ slot of glob for the data
+
+    ${*{$inner}}{'file'}  = $file;   ## Use % slot for object attributes
     ${*{$inner}}{'outer'} = { };
     ${*{$inner}}{'inner'} = { };
     ${*{$inner}}{'top'}   = 0;
 
-    ##  Note that $hash{$ref} is exactly the same as
-    ##  $hash{"$ref"} because references are automatically
-    ##  converted to strings when they are used as keys of a hash!!!
+    ##  Note that $hash{$ref} is exactly the same as $hash{"$ref"}
+    ##  because references are automatically converted to strings
+    ##  when they are used as keys of a hash!
 
     if (ref($outer))  ##  Object method
     {
@@ -96,14 +95,21 @@ sub filename
       if ((@_ < 1) || (@_ > 2));
 
     my($location) = shift;
+    my($file);
 
     if (@_ > 0)
     {
-        if (ref($_[0]))
+        $file = shift;
+        if (defined $file)
         {
-            croak "${Class}::filename(): reference not allowed as filename";
+            if (ref($file))
+            {
+                croak "${Class}::filename(): reference not allowed as filename";
+            }
+            else { $file = "$file"; }
         }
-        ${*{$location}}{'file'} = $_[0];
+        else { $file = ''; }
+        ${*{$location}}{'file'} = $file;
     }
     else
     {
@@ -128,12 +134,6 @@ sub toplevel
     }
 }
 
-#################################################################
-##                                                             ##
-##  The following function is intended for internal use only!  ##
-##                                                             ##
-#################################################################
-
 sub _self_contained_
 {
     my($outer,$inner) = @_;
@@ -144,7 +144,7 @@ sub _self_contained_
     foreach $item (keys %{$list})
     {
         $inner = ${$list}{$item};
-        return 1 if (_self_contained_($outer,$inner));
+        return 1 if (&_self_contained_($outer,$inner));
     }
     return 0;
 }
@@ -168,7 +168,7 @@ sub PRINT  ##  Aliased to "print"
                   if $^W;
                 next ITEM;
             }
-            if (_self_contained_($outer,$inner))
+            if (&_self_contained_($outer,$inner))
             {
                 croak "${Class}::print(): infinite recursion loop attempted";
             }
@@ -211,18 +211,12 @@ sub println
     ##  with the last item) in case the last item is a reference!
 }
 
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
-
 sub _read_item_
 {
     my($location) = @_;
-    my($stack,$entry,$index,$array,$item);
+    my($stack,$entry,$index,$where,$item);
 
-    if (defined ${*{$location}}{'stack'})
+    if (exists ${*{$location}}{'stack'})
     {
         $stack = ${*{$location}}{'stack'};
     }
@@ -232,40 +226,33 @@ sub _read_item_
         ${*{$location}}{'stack'} = $stack;
     }
 
-    if (scalar @{$stack})
+    if (@{$stack})
     {
         $entry = ${$stack}[0];
         $index = ${$entry}[0];
-        $array = ${$entry}[1];
-        if ($index > $#{*{$array}})
+        $where = ${$entry}[1];
+        if ((ref($where) eq $Class) && ($index < @{*{$where}}))
         {
-            shift(@{$stack});
-            return $location->_read_item_();
-        }
-        else
-        {
-            $item = ${*{$array}}[$index];
+            $item = ${*{$where}}[$index];
             ${$entry}[0]++;
             if (ref($item))
             {
                 if (ref($item) eq $Class)
                 {
-                    $entry = [ 0, $item ];
-                    unshift(@{$stack}, $entry);
+                    unshift(@{$stack}, [ 0, $item ]);
                 }
-                return $location->_read_item_();
+                return &_read_item_($location);
             }
             else { return $item; }
+        }
+        else
+        {
+            shift(@{$stack});
+            return &_read_item_($location);
         }
     }
     else { return undef; }
 }
-
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
 
 sub _read_list_
 {
@@ -273,7 +260,7 @@ sub _read_list_
     my(@result);
     my($item);
 
-    while ($item = $location->_read_item_())
+    while ($item = &_read_item_($location))
     {
         push(@result, $item);
     }
@@ -291,11 +278,11 @@ sub READLINE  ##  Aliased to "read"
     {
         if (wantarray)
         {
-            return( $location->_read_list_() );
+            return( &_read_list_($location) );
         }
         else
         {
-            return $location->_read_item_();
+            return &_read_item_($location);
         }
     }
 }
@@ -309,10 +296,7 @@ sub reset
 
     if (ref($location))  ##  Object method
     {
-        if (defined ${*{$location}}{'stack'})
-        {
-            delete ${*{$location}}{'stack'};
-        }
+        delete ${*{$location}}{'stack'};
     }
     else                 ##  Class method
     {
@@ -320,20 +304,11 @@ sub reset
         {
             if ($location =~ /^LOCATION\d+$/)
             {
-                if (defined ${*{$Data::Locations::{$location}}}{'stack'})
-                {
-                    delete ${*{$Data::Locations::{$location}}}{'stack'};
-                }
+                delete ${*{$Data::Locations::{$location}}}{'stack'};
             }
         }
     }
 }
-
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
 
 sub _traverse_recursive_
 {
@@ -351,7 +326,7 @@ sub _traverse_recursive_
         {
             if (ref($item) eq $Class)
             {
-                $item->_traverse_recursive_($callback);
+                &_traverse_recursive_($item,$callback);
             }
         }
         else
@@ -360,13 +335,6 @@ sub _traverse_recursive_
         }
     }
 }
-
-####################################################################
-##                                                                ##
-##  The following method is intended for experienced users only!  ##
-##  Use with precaution!                                          ##
-##                                                                ##
-####################################################################
 
 sub traverse
 {
@@ -382,7 +350,7 @@ sub traverse
 
     if (ref($location))  ##  Object method
     {
-        $location->_traverse_recursive_($callback);
+        &_traverse_recursive_($location,$callback);
     }
     else                 ##  Class method
     {
@@ -392,18 +360,12 @@ sub traverse
             {
                 if (${*{$Data::Locations::{$location}}}{'top'})
                 {
-                    &{$callback}(${*{$Data::Locations::{$location}}});
+                    &{$callback}( ${*{$Data::Locations::{$location}}} );
                 }
             }
         }
     }
 }
-
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
 
 sub _dump_recursive_
 {
@@ -416,7 +378,7 @@ sub _dump_recursive_
         {
             if (ref($item) eq $Class)
             {
-                $item->_dump_recursive_($filehandle);
+                &_dump_recursive_($item,$filehandle);
             }
         }
         else
@@ -426,12 +388,6 @@ sub _dump_recursive_
     }
 }
 
-###############################################################
-##                                                           ##
-##  The following method is intended for internal use only!  ##
-##                                                           ##
-###############################################################
-
 sub _dump_location_
 {
     local(*FILEHANDLE);
@@ -440,11 +396,16 @@ sub _dump_location_
 
     $file = ${*{$location}}{'file'};
     $file = shift if (@_ > 0);
-
-    if (ref($file))
+    if (defined $file)
     {
-        croak "${Class}::dump(): reference not allowed as filename";
+        if (ref($file))
+        {
+            croak "${Class}::dump(): reference not allowed as filename";
+        }
+        else { $file = "$file"; }
     }
+    else { $file = ''; }
+
     if ($file =~ /^\s*$/)
     {
         carp "${Class}::dump(): filename missing or empty" if $^W;
@@ -456,11 +417,15 @@ sub _dump_location_
     }
     unless (open(FILEHANDLE, $file))
     {
-        carp "${Class}::dump(): can't open file '$file': " . lc($!) if $^W;
+        carp "${Class}::dump(): can't open file '$file': \L$!\E" if $^W;
         return 0;
     }
-    $location->_dump_recursive_(*FILEHANDLE);
-    close(FILEHANDLE);
+    &_dump_recursive_($location,*FILEHANDLE);
+    unless (close(FILEHANDLE))
+    {
+        carp "${Class}::dump(): can't close file '$file': \L$!\E" if $^W;
+        return 0;
+    }
     return 1;
 }
 
@@ -477,18 +442,11 @@ sub dump
     {
         if (@_ > 0)
         {
-            if (ref($_[0]))
-            {
-                croak "${Class}::dump(): reference not allowed as filename";
-            }
-            else
-            {
-                return $location->_dump_location_($_[0]);
-            }
+            return &_dump_location_($location,$_[0]);
         }
         else
         {
-            return $location->_dump_location_();
+            return &_dump_location_($location);
         }
     }
     else                 ##  Class method
@@ -501,7 +459,7 @@ sub dump
                 if (${*{$Data::Locations::{$location}}}{'top'})
                 {
                     $ok = 0 unless
-                    (${*{$Data::Locations::{$location}}}->_dump_location_());
+                      &_dump_location_( ${*{$Data::Locations::{$location}}} );
                 }
             }
         }
@@ -525,13 +483,14 @@ sub delete
             $inner = ${$list}{$item};
             $link = ${*{$inner}}{'outer'};
             delete ${$link}{$outer};
-            unless (scalar %{$link})
+            unless (%{$link})
             {
                 ${*{$inner}}{'top'} = 1;
             }
         }
         @{*{$outer}} = ( );
         ${*{$outer}}{'inner'} = { };
+        delete ${*{$outer}}{'stack'};
     }
     else              ##  Class method
     {
@@ -539,11 +498,11 @@ sub delete
         {
             if ($item =~ /^LOCATION\d+$/)
             {
-                bless (\*{$Data::Locations::{$item}},  ## Prevent further use
+                bless( \*{$Data::Locations::{$item}},  ## Prevent further use
                   $Dummy);
-                undef ${*{$Data::Locations::{$item}}}; ## Clear self-reference
-                undef @{*{$Data::Locations::{$item}}}; ## Free memory
-                undef %{*{$Data::Locations::{$item}}}; ## Clear attributes
+                undef ${*{$Data::Locations::{$item}}}; ## Break self-reference
+                undef @{*{$Data::Locations::{$item}}}; ## Free memory (data!)
+                undef %{*{$Data::Locations::{$item}}}; ## Clear obj attributes
                 delete $Data::Locations::{$item};      ## Remove symtab entry
             }
         }
@@ -560,7 +519,7 @@ sub tie
     my($location,$filehandle) = @_;
 
     $filehandle =~ s/^\*//;
-    $filehandle = Symbol::qualify($filehandle, scalar caller);
+    $filehandle = Symbol::qualify($filehandle, caller);
 no strict "refs";
     tie(*{$filehandle}, $Class, $location);
 use strict "refs";
@@ -714,6 +673,27 @@ of large software projects.
       $filehandle = select();
       select($location);
       $oldfilehandle = select($newlocation);
+
+=head1 LIMITATIONS
+
+In the current implementation of this module, locations are global
+variables and do not automatically destroy themselves when your
+last reference to one of them goes out of scope.
+
+This is mainly due to the fact that, in the current implementation,
+locations contain self-references, which are essential in order to
+be able to use locations as file handles and objects simultaneously.
+
+Because locations are global variables, and because some (class)
+methods (see the section DESCRIPTION below for details) act on ALL
+locations, there may be undesirable side effects if more than one
+module is using locations at the same time, i.e., in the same program.
+
+For instance dumping all locations from one module using the class method
+"C<dump()>" will also dump the locations of all other modules.
+
+Truly local locations are on the wish list for the next major release
+(version 5.0) of this module. Stay tuned.
 
 =head1 DESCRIPTION
 
@@ -1697,7 +1677,7 @@ built-in operators for file access.
   $prototype->print("void hello(void)");
 
   $copyright->println("/*");
-  $copyright->println("    Copyright (c) 1997, 1998 by Steffen Beyer.");
+  $copyright->println("    Copyright (c) 1997, 1998, 1999 by Steffen Beyer.");
   $copyright->println("    All rights reserved.");
   $copyright->println("*/");
 
@@ -1716,7 +1696,7 @@ built-in operators for file access.
 When executed, this example will print
 
   /*
-      Copyright (c) 1997, 1998 by Steffen Beyer.
+      Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
       All rights reserved.
   */
   default filename = 'default.txt'
@@ -1727,7 +1707,7 @@ to the screen and create the following two files:
   example.c
   ::::::::::::::
   /*
-      Copyright (c) 1997, 1998 by Steffen Beyer.
+      Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
       All rights reserved.
   */
   #include <stdio.h>
@@ -1740,7 +1720,7 @@ to the screen and create the following two files:
   example.h
   ::::::::::::::
   /*
-      Copyright (c) 1997, 1998 by Steffen Beyer.
+      Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
       All rights reserved.
   */
   #include <stdio.h>
@@ -2039,7 +2019,7 @@ perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 4.2.
+This man page documents "Data::Locations" version 4.3.
 
 =head1 AUTHOR
 
@@ -2055,7 +2035,7 @@ B<Please contact me by e-mail whenever possible!>
 
 =head1 COPYRIGHT
 
-Copyright (c) 1997, 1998 by Steffen Beyer.
+Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
 All rights reserved.
 
 =head1 LICENSE

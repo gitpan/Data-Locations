@@ -1,9 +1,9 @@
                   =========================================
-                    Package "Data::Locations" Version 4.2
+                    Package "Data::Locations" Version 4.3
                   =========================================
 
 
-                  Copyright (c) 1997, 1998 by Steffen Beyer.
+               Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
                              All rights reserved.
 
 
@@ -50,7 +50,7 @@ Detailed installation guide:
 ----------------------------
 
  1) Change directory to the directory that has been created by unpacking this
-    package ("cd Data-Locations-4.2").
+    package ("cd Data-Locations-4.3").
 
  2) Type "perl Makefile.PL" (or whatever the name and path of your Perl 5
     binary is).
@@ -64,22 +64,25 @@ Detailed installation guide:
     "nmake" (MS Visual C++) instead!)
 
     This will create a temporary installation in the "blib" subdirectory,
-    which is normally used to run "make test", and from where the module
+    which is primarily used to run "make test", and from where the module
     is copied to its final destination by "make install".
 
- 4) There are currently no tests defined for this module.
+ 4) Now issue "make test" (or "dmake test" or "nmake test", respectively).
 
-    Developing a test suite for this module is hard.
+    The output should look somewhat like this:
 
-    Moreover, there might be platform dependencies concerning filenames
-    or -paths.
-
-    (The module can be used on all platforms, though, because it simply
-    passes through all filenames.)
-
-    I have tested this module thoroughly on my development platform,
-    and since it is written in plain Perl and doesn't use any external
-    modules, it should run equally well on any platform supporting Perl.
+    PERL_DL_NONLAZY=1 /sw/bin/perl -I./blib/arch -I./blib/lib
+    -I/sw/pkg/perl/lib/5.00502/PA-RISC1.1 -I/sw/pkg/perl/lib/5.00502
+    -e 'use Test::Harness qw(&runtests $verbose); $verbose=0;
+    runtests @ARGV;' t/*.t
+    t/00____version.....ok
+    t/06______loops.....ok
+    t/16__example_1.....ok
+    t/17__example_2.....ok
+    t/18__example_3.....ok
+    t/19__example_4.....ok
+    All tests successful.
+    Files=6,  Tests=13,  2 wallclock secs ( 1.23 cusr +  0.14 csys =  1.37 CPU)
 
  5) At last, type "make install" (or "dmake install", "nmake install").
 

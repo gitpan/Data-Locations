@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 4.2
+                    Package "Data::Locations" Version 4.3
                   =========================================
 
 
@@ -119,16 +119,8 @@ Win32).
 Credits:
 --------
 
-Many thanks go to Mr. Gero Scholz (now Head of Department for Core Business
-IT-Components at the Dresdner Bank in Frankfurt, Germany) for his personal
-support and for writing the "ProMAC" macro processor (some sort of a precursor
-to Perl, in spirit) and for implementing the concept of "locations" in it,
-which inspired me to write this Perl module!
-
-Mr. Scholz owes his own inspiration to the "DELTA" macro processor (a tool
-widely used during the seventies, as it seems), where a rudimentary version
-of the concept of "locations" was implemented and where its name ("locations")
-seems to originate from.
+Please refer to the file "CREDITS.txt" in this distribution for a list
+of contributors.
 
 
 Legal issues:
@@ -136,7 +128,7 @@ Legal issues:
 
 This package with all its parts is
 
-Copyright (c) 1997, 1998 by Steffen Beyer.
+Copyright (c) 1997, 1998, 1999 by Steffen Beyer.
 All rights reserved.
 
 This package is free software; you can redistribute it and/or
