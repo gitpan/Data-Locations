@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.3
+                    Package "Data::Locations" Version 5.4
                   =========================================
 
 
@@ -12,12 +12,15 @@ or from any CPAN (= "Comprehensive Perl Archive Network") mirror server:
                http://www.perl.com/CPAN/authors/id/S/ST/STBEY/
 
 
-What's new in version 5.3:
+What's new in version 5.4:
 --------------------------
 
- +  Re-applied the refcount offset in "02___refcount.t" to
-    Perl versions >= 5.008005 in order to fix the failing
-    tests. See also version 5.1 in the file CHANGES.txt.
+ +  Fixed test file "02___refcount.t" to auto-adjust
+    the offset dealing with self-ties not incrementing
+    the refcount in some Perl versions.
+ +  Added a warning to "Makefile.PL" that Perl versions
+    including and between v5.6.1 and v5.7.0 are not fully
+    supported (test file "11_______dump.t" dumps core).
 
 
 Legal issues:
@@ -90,7 +93,7 @@ the "zip" archive.
 Note to CPAN Testers:
 ---------------------
 
-After completion, version 5.3 of this module has already
+After completion, version 5.4 of this module has already
 been tested successfully with the following configurations:
 
   Perl 5.005_03  -  FreeBSD 4.1.1-RELEASE (with "dlopen() relative paths" patch)
@@ -102,13 +105,10 @@ been tested successfully with the following configurations:
   Perl 5.8.5     -  FreeBSD 4.10-STABLE
   Perl 5.8.0     -  Windows 2000 & MS VC++ 6.0 (native Perl build)
 
-Not all tests passed:
+Test file "11_______dump.t" dumps core; all other tests pass:
 
   Perl 5.6.1     -  FreeBSD 4.1.1-RELEASE
   Perl 5.7.0     -  FreeBSD 4.1.1-RELEASE
-
-(As long as the "1?__example_?.t" tests pass,
-you may ignore the failing "11_______dump.t" test.)
 
 
 Installation:

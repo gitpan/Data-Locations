@@ -16,13 +16,6 @@ print "1..40\n";
 
 $n = 1;
 
-# Fixing
-# t/02___refcount.....FAILED tests 5, 7, 9, 11, 13, 15, 37-38
-
-$fix =  0;
-$fix = -1 if ((($] >= 5.00503) and ($] < 5.007)) or
-               ($] >= 5.008005));
-
 no strict "refs";
 $loc = \*{'Data::Locations::LOCATION'};
 use strict "refs";
@@ -32,7 +25,7 @@ bless($loc, 'Data::Locations');
 
 tie(*{$loc}, 'Data::Locations', $loc);
 
-&check($loc,2+$fix);
+$fix = &check($loc,2,1);
 
 ${*{$loc}} = $loc;
 
@@ -85,12 +78,13 @@ exit;
 
 sub check
 {
-    my($obj,$refs) = @_;
-    my($test1,$test2);
+    my($obj,$refs,$lax) = @_;
+    my($test1,$test2,$fix);
 
     $refs++;
+    $fix = 0;
     $test1 = &Data::Locations::_mortalize_($obj);
-    if ($test1 == $refs)
+    if ($test1 == $refs or ($lax and $test1 == ($refs + --$fix)))
     {print "ok $n\n";} else {print "not ok $n\n";}
     $n++;
 
@@ -101,7 +95,7 @@ sub check
     &Data::Locations::_resurrect_($obj,$test1);
 
     $test2 = &Data::Locations::_mortalize_($obj);
-    if ($test2 == $refs)
+    if ($test2 == $refs or ($lax and $test2 == ($refs + $fix)))
     {print "ok $n\n";} else {print "not ok $n\n";}
     $n++;
 
@@ -110,6 +104,8 @@ sub check
     $n++;
 
     $obj->_resurrect_($test2);
+
+    return $fix if ($lax);
 }
 
 __END__

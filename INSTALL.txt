@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.3
+                    Package "Data::Locations" Version 5.4
                   =========================================
 
 
@@ -81,7 +81,7 @@ Detailed installation guide:
 ----------------------------
 
  1) Change directory to the directory that has been created by unpacking this
-    package ("cd Data-Locations-5.3").
+    package ("cd Data-Locations-5.4").
 
  2) Type "perl Makefile.PL" (or whatever the name and path of your Perl 5
     binary is).

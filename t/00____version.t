@@ -12,7 +12,7 @@ use Data::Locations;
 print "1..1\n";
 
 $n = 1;
-if ($Data::Locations::VERSION eq "5.3")
+if ($Data::Locations::VERSION eq "5.4")
 {print "ok $n\n";} else {print "not ok $n\n";}
 $n++;
 

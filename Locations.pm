@@ -21,7 +21,7 @@ use DynaLoader ();
 
 @ISA = qw(DynaLoader);
 
-$VERSION = "5.3";
+$VERSION = "5.4";
 
 DynaLoader::bootstrap Data::Locations $VERSION;
 
@@ -1907,7 +1907,7 @@ perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 5.3.
+This man page documents "Data::Locations" version 5.4.
 
 =head1 AUTHOR
 

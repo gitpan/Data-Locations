@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.3
+                    Package "Data::Locations" Version 5.4
                   =========================================
 
 
@@ -9,6 +9,15 @@
 
 Version history:
 ----------------
+
+Version 5.4   25.10.2004
+
+ +  Fixed test file "02___refcount.t" to auto-adjust
+    the offset dealing with self-ties not incrementing
+    the refcount in some Perl versions.
+ +  Added a warning to "Makefile.PL" that Perl versions
+    including and between v5.6.1 and v5.7.0 are not fully
+    supported (test file "11_______dump.t" dumps core).
 
 Version 5.3   24.10.2004
 

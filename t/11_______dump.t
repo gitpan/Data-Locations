@@ -17,8 +17,7 @@ $n = 1;
 $self = $0;
 $self =~ s!^.*[^0-9a-zA-Z_\.]!!;
 
-$temp =
-    $ENV{'TMP'} || $ENV{'TEMP'} || $ENV{'TMPDIR'} || $ENV{'TEMPDIR'} || '/tmp';
+$temp = $ENV{'TMP'} || $ENV{'TEMP'} || $ENV{'TMPDIR'} || $ENV{'TEMPDIR'} || '.';
 $temp =~ s!/+$!!;
 
 $file0 = "$temp/${self}_0.$$";
