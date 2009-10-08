@@ -27,3 +27,4 @@ t/15__example_1.t
 t/16__example_2.t
 t/17__example_3.t
 t/18__example_4.t
+META.yml                                 Module meta-data (added by MakeMaker)

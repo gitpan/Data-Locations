@@ -1,9 +1,9 @@
                   =========================================
-                    Package "Data::Locations" Version 5.4
+                    Package "Data::Locations" Version 5.5
                   =========================================
 
 
-                 Copyright (c) 1997 - 2004 by Steffen Beyer.
+                 Copyright (c) 1997 - 2009 by Steffen Beyer.
                              All rights reserved.
 
 
@@ -40,15 +40,18 @@ Windows 95/98 since the Win 95/98 command shell doesn't
 support the "&&" operator. You will need the Windows NT
 command shell ("cmd.exe") or the "4DOS" shell to be
 installed on your Windows 95/98 system first. Note that
-Windows NT and Windows 2000 are not affected and just
-work fine. I don't know about Windows XP, however.
+Windows NT, Windows 2000 and Windows XP are not affected
+and just work fine. I don't know about Windows Vista and
+Windows 7, however.
 
 Note that ActiveState provides precompiled binaries of
 this module for their Win32 port of Perl ("ActivePerl")
 on their web site, which you should be able to install
-simply by typing "ppm install Data-Locations" in your MS-DOS
-command shell (but note the "-" instead of "::" in the
-package name!). This also works under Windows 95/98 (!).
+simply by typing "ppm install Data-Locations" in your
+MS-DOS command shell (but note the "-" instead of "::"
+in the package name!).
+
+This also works under Windows 95/98 (!).
 
 If your firewall prevents "ppm" from downloading
 this package, you can also download it manually from
@@ -81,7 +84,7 @@ Detailed installation guide:
 ----------------------------
 
  1) Change directory to the directory that has been created by unpacking this
-    package ("cd Data-Locations-5.4").
+    package ("cd Data-Locations-5.5").
 
  2) Type "perl Makefile.PL" (or whatever the name and path of your Perl 5
     binary is).
@@ -108,7 +111,7 @@ Detailed installation guide:
 
     Should you encounter any compiler warnings or errors (like the redefi-
     nition of certain types already defined by your system), please contact
-    me via e-mail at <sb@engelschall.com>, sending me your compiler output
+    me via e-mail at <STBEY@cpan.org>, sending me your compiler output
     (both STDOUT and STDERR). Thank you!
 
     ======================================================================
@@ -129,31 +132,30 @@ Detailed installation guide:
 
     The output should look somewhat like this:
 
-    PERL_DL_NONLAZY=1 /usr/sw/bin/perl -I./blib/arch -I./blib/lib
-    -I/usr/sw/pkg/perl/lib/5.00503/i386-freebsd -I/usr/sw/pkg/perl/lib/5.00503
-    -e 'use Test::Harness qw(&runtests $verbose); $verbose=0; runtests @ARGV;'
-    t/*.t
-    t/00____version.....ok
-    t/01________new.....ok
-    t/02___refcount.....ok
-    t/03___filename.....ok
-    t/04______print.....ok
-    t/05______loops.....ok
-    t/06_____printf.....ok
-    t/07____println.....ok
-    t/08_______read.....ok
-    t/09______reset.....ok
-    t/10___traverse.....ok
-    t/11_______dump.....ok
-    t/12_____delete.....ok
-    t/13___toplevel.....ok
-    t/14________tie.....ok
-    t/15__example_1.....ok
-    t/16__example_2.....ok
-    t/17__example_3.....ok
-    t/18__example_4.....ok
+    PERL_DL_NONLAZY=1 /v/guest/sw/bin/perl "-MExtUtils::Command::MM"
+    "-e" "test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+    t/00____version.t .. ok
+    t/01________new.t .. ok
+    t/02___refcount.t .. ok
+    t/03___filename.t .. ok
+    t/04______print.t .. ok
+    t/05______loops.t .. ok
+    t/06_____printf.t .. ok
+    t/07____println.t .. ok
+    t/08_______read.t .. ok
+    t/09______reset.t .. ok
+    t/10___traverse.t .. ok
+    t/11_______dump.t .. ok
+    t/12_____delete.t .. ok
+    t/13___toplevel.t .. ok
+    t/14________tie.t .. ok
+    t/15__example_1.t .. ok
+    t/16__example_2.t .. ok
+    t/17__example_3.t .. ok
+    t/18__example_4.t .. ok
     All tests successful.
-    Files=19, Tests=792, 8 wallclock secs (6.63 cusr + 0.78 csys = 7.41 CPU)
+    Files=19, Tests=796,  1 wallclock secs ( 0.22 usr  0.09 sys +  0.41 cusr  0.55 csys =  1.28 CPU)
+    Result: PASS
 
  5) At last, type "make install" (or "dmake install", "nmake install").
 

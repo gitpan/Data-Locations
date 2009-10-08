@@ -1,5 +1,5 @@
                   =========================================
-                    Package "Data::Locations" Version 5.4
+                    Package "Data::Locations" Version 5.5
                   =========================================
 
 
@@ -12,15 +12,10 @@ or from any CPAN (= "Comprehensive Perl Archive Network") mirror server:
                http://www.perl.com/CPAN/authors/id/S/ST/STBEY/
 
 
-What's new in version 5.4:
+What's new in version 5.5:
 --------------------------
 
- +  Fixed test file "02___refcount.t" to auto-adjust
-    the offset dealing with self-ties not incrementing
-    the refcount in some Perl versions.
- +  Added a warning to "Makefile.PL" that Perl versions
-    including and between v5.6.1 and v5.7.0 are not fully
-    supported (test file "11_______dump.t" dumps core).
+ +  Minor bugfixes and updates
 
 
 Legal issues:
@@ -28,7 +23,7 @@ Legal issues:
 
 This package with all its parts is
 
-Copyright (c) 1997 - 2004 by Steffen Beyer.
+Copyright (c) 1997 - 2009 by Steffen Beyer.
 All rights reserved.
 
 This package is free software; you can use, modify and redistribute
@@ -72,15 +67,18 @@ Windows 95/98 since the Win 95/98 command shell doesn't
 support the "&&" operator. You will need the Windows NT
 command shell ("cmd.exe") or the "4DOS" shell to be
 installed on your Windows 95/98 system first. Note that
-Windows NT and Windows 2000 are not affected and just
-work fine. I don't know about Windows XP, however.
+Windows NT, Windows 2000 and Windows XP are not affected
+and just work fine. I don't know about Windows Vista and
+Windows 7, however.
 
 Note that ActiveState provides precompiled binaries of
 this module for their Win32 port of Perl ("ActivePerl")
 on their web site, which you should be able to install
-simply by typing "ppm install Data-Locations" in your MS-DOS
-command shell (but note the "-" instead of "::" in the
-package name!). This also works under Windows 95/98 (!).
+simply by typing "ppm install Data-Locations" in your
+MS-DOS command shell (but note the "-" instead of "::"
+in the package name!).
+
+This also works under Windows 95/98 (!).
 
 If your firewall prevents "ppm" from downloading
 this package, you can also download it manually from
@@ -93,22 +91,13 @@ the "zip" archive.
 Note to CPAN Testers:
 ---------------------
 
-After completion, version 5.4 of this module has already
+After completion, version 5.5 of this module has already
 been tested successfully with the following configurations:
 
-  Perl 5.005_03  -  FreeBSD 4.1.1-RELEASE (with "dlopen() relative paths" patch)
-  Perl 5.6.0     -  FreeBSD 4.1.1-RELEASE
-  Perl 5.7.1     -  FreeBSD 4.1.1-RELEASE
-  Perl 5.7.2     -  FreeBSD 4.1.1-RELEASE
-  Perl 5.8.0     -  FreeBSD 4.1.1-RELEASE
-  Perl 5.8.5     -  FreeBSD 4.1.1-RELEASE
-  Perl 5.8.5     -  FreeBSD 4.10-STABLE
-  Perl 5.8.0     -  Windows 2000 & MS VC++ 6.0 (native Perl build)
-
-Test file "11_______dump.t" dumps core; all other tests pass:
-
-  Perl 5.6.1     -  FreeBSD 4.1.1-RELEASE
-  Perl 5.7.0     -  FreeBSD 4.1.1-RELEASE
+  Perl 5.005_03  -  Windows XP SP3 & MS VC++ 6.0 (native Perl build)
+  Perl 5.8.0     -  Windows XP SP3 & MS VC++ 6.0 (native Perl build)
+  Perl 5.10.1    -  Windows XP SP3 & MS VC++ 6.0 (native Perl build)
+  Perl 5.10.1    -  FreeBSD 7.2-STABLE
 
 
 Installation:
@@ -237,6 +226,6 @@ I hope you will find this module useful. Enjoy!
 
 Yours,
 --
-  Steffen Beyer <sb@engelschall.com> http://www.engelschall.com/u/sb/
+  Steffen Beyer <STBEY@cpan.org> http://www.engelschall.com/u/sb/
   "There is enough for the need of everyone in this world, but not
    for the greed of everyone." - Mohandas Karamchand "Mahatma" Gandhi

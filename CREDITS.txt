@@ -1,9 +1,9 @@
                   =========================================
-                    Package "Data::Locations" Version 5.4
+                    Package "Data::Locations" Version 5.5
                   =========================================
 
 
-                 Copyright (c) 1997 - 2004 by Steffen Beyer.
+                 Copyright (c) 1997 - 2009 by Steffen Beyer.
                              All rights reserved.
 
 

@@ -2,7 +2,7 @@
 
 /*****************************************************************************/
 /*                                                                           */
-/*    Copyright (c) 1997 - 2004 by Steffen Beyer.                            */
+/*    Copyright (c) 1997 - 2009 by Steffen Beyer.                            */
 /*    All rights reserved.                                                   */
 /*                                                                           */
 /*    This package is free software; you can redistribute it                 */
@@ -79,6 +79,19 @@ CODE:
         else DATA_LOCATIONS_NUMERIC_ERROR("_resurrect_");
     }
     else DATA_LOCATIONS_OBJECT_ERROR("_resurrect_");
+}
+
+
+void
+Version(...)
+PPCODE:
+{
+    if ((items >= 0) && (items <= 1))
+    {
+        EXTEND(sp,1);
+        PUSHs(sv_2mortal(newSVpv((char *)"5.5",0)));
+    }
+    else croak("Usage: Data::Locations->Version()");
 }
 
 

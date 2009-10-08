@@ -1,7 +1,7 @@
 
 ###############################################################################
 ##                                                                           ##
-##    Copyright (c) 1997 - 2004 by Steffen Beyer.                            ##
+##    Copyright (c) 1997 - 2009 by Steffen Beyer.                            ##
 ##    All rights reserved.                                                   ##
 ##                                                                           ##
 ##    This package is free software; you can redistribute it                 ##
@@ -13,17 +13,24 @@ package Data::Locations;
 
 use 5.004;
 use strict;
-use vars qw(@ISA $VERSION);
+use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $VERSION);
 
-use Carp ();
-use Symbol ();
-use DynaLoader ();
+require Carp;
+require Symbol;
+require Exporter;
+require DynaLoader;
 
-@ISA = qw(DynaLoader);
+@ISA = qw(Exporter DynaLoader);
 
-$VERSION = "5.4";
+@EXPORT = ();
 
-DynaLoader::bootstrap Data::Locations $VERSION;
+@EXPORT_OK = ();
+
+%EXPORT_TAGS = (all => [@EXPORT_OK]);
+
+$VERSION = "5.5";
+
+bootstrap Data::Locations $VERSION;
 
 my $Class = __PACKAGE__;    ##  This class's name
 my $Table = $Class . '::';  ##  This class's symbol table
@@ -1564,7 +1571,7 @@ See the section on "C<select()>" in L<perlfunc(1)> for more details.
   $prototype->print("void hello(void)");
 
   $copyright->println("/*");
-  $copyright->println("    Copyright (c) 1997 - 2004 by Steffen Beyer.");
+  $copyright->println("    Copyright (c) 1997 - 2009 by Steffen Beyer.");
   $copyright->println("    All rights reserved.");
   $copyright->println("*/");
 
@@ -1583,7 +1590,7 @@ See the section on "C<select()>" in L<perlfunc(1)> for more details.
 When executed, this example will print
 
   /*
-      Copyright (c) 1997 - 2004 by Steffen Beyer.
+      Copyright (c) 1997 - 2009 by Steffen Beyer.
       All rights reserved.
   */
   default filename = 'default.txt'
@@ -1594,7 +1601,7 @@ to the screen and create the following two files:
   example.c
   ::::::::::::::
   /*
-      Copyright (c) 1997 - 2004 by Steffen Beyer.
+      Copyright (c) 1997 - 2009 by Steffen Beyer.
       All rights reserved.
   */
   #include <stdio.h>
@@ -1607,7 +1614,7 @@ to the screen and create the following two files:
   example.h
   ::::::::::::::
   /*
-      Copyright (c) 1997 - 2004 by Steffen Beyer.
+      Copyright (c) 1997 - 2009 by Steffen Beyer.
       All rights reserved.
   */
   #include <stdio.h>
@@ -1907,17 +1914,17 @@ perltoot(1), perltie(1), printf(3), sprintf(3).
 
 =head1 VERSION
 
-This man page documents "Data::Locations" version 5.4.
+This man page documents "Data::Locations" version 5.5.
 
 =head1 AUTHOR
 
  Steffen Beyer
- mailto:sb@engelschall.com
+ mailto:STBEY@cpan.org
  http://www.engelschall.com/u/sb/download/
 
 =head1 COPYRIGHT
 
-Copyright (c) 1997 - 2004 by Steffen Beyer.
+Copyright (c) 1997 - 2009 by Steffen Beyer.
 All rights reserved.
 
 =head1 LICENSE
